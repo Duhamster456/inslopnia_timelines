@@ -1,0 +1,984 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF Cup / forensics,radio,dsp / Chik Chirik</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22-8%20-2%20136%2076%22%20aria-hidden%3D%22true%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22f-glow%22%20cx%3D%2250%25%22%20cy%3D%2250%25%22%20r%3D%2250%25%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%20stop-opacity%3D%22.75%22/%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23ffa51f%22%20stop-opacity%3D%22.35%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff9a00%22%20stop-opacity%3D%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse%20cx%3D%2260%22%20cy%3D%2236%22%20rx%3D%2234%22%20ry%3D%2224%22%20fill%3D%22url%28%23f-glow%29%22/%3E%3Cpolygon%20points%3D%2260.00%2C15.50%2057.87%2C22.57%2062.13%2C22.57%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2270.25%2C18.25%2064.87%2C23.30%2068.56%2C25.43%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2277.75%2C25.75%2070.57%2C27.44%2072.70%2C31.13%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2280.50%2C36.00%2073.43%2C33.87%2073.43%2C38.13%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2277.75%2C46.25%2072.70%2C40.87%2070.57%2C44.56%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2270.25%2C53.75%2068.56%2C46.57%2064.87%2C48.70%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2260.00%2C56.50%2062.13%2C49.43%2057.87%2C49.43%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2249.75%2C53.75%2055.13%2C48.70%2051.44%2C46.57%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2242.25%2C46.25%2049.43%2C44.56%2047.30%2C40.87%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2239.50%2C36.00%2046.57%2C38.13%2046.57%2C33.87%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2242.25%2C25.75%2047.30%2C31.13%2049.43%2C27.44%22%20fill%3D%22%23f9a61a%22/%3E%3Cpolygon%20points%3D%2249.75%2C18.25%2051.44%2C25.43%2055.13%2C23.30%22%20fill%3D%22%23f9a61a%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2236%22%20r%3D%2212.6%22%20fill%3D%22%23ffd27a%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2236%22%20r%3D%2211.4%22%20fill%3D%22%23f7a01b%22/%3E%3Cpath%20d%3D%22M55%2C31L65%2C41M65%2C31L55%2C41%22%20stroke%3D%22%23141414%22%20stroke-width%3D%223.6%22/%3E%3Cpath%20d%3D%22M5%2C36Q60%2C-18%20115%2C36Q60%2C90%205%2C36Z%22%20fill%3D%22none%22%20stroke%3D%22%23141414%22%20stroke-width%3D%227%22%20stroke-linejoin%3D%22miter%22/%3E%3C/svg%3E">
+<style>
+/* =====================================================================================
+   inslopnia · shared design system
+   Inlined into every timeline render (template.html) and the Explorer GUI (gui.html)
+   at build/serve time, so outputs stay single-file. Edit THIS file to restyle both.
+
+   Concept: «insomnia night shift» — a deep night sky lit by the amber sun from the logo.
+   Night (dark) and Dawn (light) are both first-class themes. Change the look here:
+     1. Fonts ............ --font-*
+     2. Surfaces & ink ... --page … --muted (per theme)
+     3. Accent ........... --accent* (the logo amber; try #4fd1c5 or #a78bfa for a twist)
+     4. Data colours ..... --c-* (categorical, CVD-validated order) and status colours
+     5. Shape ............ --radius*, --shadow*
+   ===================================================================================== */
+
+:root {
+  /* 1 · fonts — system only, the files must work offline */
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: Bahnschrift, "DIN Alternate", "Roboto Condensed", "Arial Narrow", sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", "JetBrains Mono", Consolas, ui-monospace, monospace;
+
+  /* 5 · shape */
+  --radius: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  /* ---------- Dawn (light) ---------- */
+  color-scheme: light;
+  --page: #f4efe6;
+  --glow-1: rgba(255, 168, 46, .22);
+  --glow-2: rgba(120, 104, 230, .10);
+  --stars: transparent;
+  --surface: #fffcf6;
+  --surface-2: #f3ece0;
+  --surface-3: #e8dfcf;
+  --glass: rgba(255, 252, 246, .74);
+  --ink: #1d1a15;
+  --ink-2: #5a5247;
+  --muted: #8d8475;
+  --grid: #e7dfd1;
+  --axis: #cdc2ae;
+  --ring: rgba(46, 36, 20, .10);
+  --hl: rgba(232, 144, 12, .10);
+  --lane-alt: rgba(46, 36, 20, .028);
+  --shadow-sm: 0 1px 2px rgba(60, 40, 10, .06);
+  --shadow: 0 1px 2px rgba(60, 40, 10, .05), 0 10px 30px -12px rgba(60, 40, 10, .18);
+  --shadow-lg: 0 20px 60px -20px rgba(60, 40, 10, .35);
+
+  /* 3 · accent: the sun */
+  --accent: #e08a00;
+  --accent-2: #ffb547;
+  --accent-ink: #2a1800;
+  --accent-soft: rgba(224, 138, 0, .13);
+  --sun-glow: 0 0 0 1px rgba(224, 138, 0, .25), 0 0 24px -4px rgba(255, 170, 40, .55);
+
+  /* 4 · data colours (light steps) */
+  --c-blue: #2a78d6; --c-orange: #eb6834; --c-aqua: #1baf7a; --c-yellow: #eda100;
+  --c-magenta: #e87ba4; --c-green: #008300; --c-violet: #6250d6; --c-red: #e34948;
+  --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+  --neutral: #b3ab9c; --cancel: #6f6a60;
+}
+
+/* ---------- Night (dark) — OS preference unless the viewer forced light ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #080b12;
+    --glow-1: rgba(255, 158, 31, .13);
+    --glow-2: rgba(96, 86, 230, .16);
+    --stars: rgba(255, 255, 255, .55);
+    --surface: #10141d;
+    --surface-2: #171c27;
+    --surface-3: #1f2532;
+    --glass: rgba(14, 18, 26, .72);
+    --ink: #eef1f6;
+    --ink-2: #b4bbc9;
+    --muted: #7a8394;
+    --grid: #1c2230;
+    --axis: #2b3242;
+    --ring: rgba(255, 255, 255, .075);
+    --hl: rgba(255, 173, 51, .10);
+    --lane-alt: rgba(255, 255, 255, .022);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+    --shadow: 0 1px 1px rgba(0, 0, 0, .35), 0 14px 40px -18px rgba(0, 0, 0, .8);
+    --shadow-lg: 0 24px 70px -20px rgba(0, 0, 0, .9);
+    --accent: #ffad33;
+    --accent-2: #ffd27a;
+    --accent-ink: #1d1200;
+    --accent-soft: rgba(255, 173, 51, .14);
+    --sun-glow: 0 0 0 1px rgba(255, 173, 51, .35), 0 0 28px -4px rgba(255, 166, 31, .6);
+    --c-blue: #3987e5; --c-orange: #d95926; --c-aqua: #199e70; --c-yellow: #c98500;
+    --c-magenta: #d55181; --c-green: #008300; --c-violet: #9085e9; --c-red: #e66767;
+    --neutral: #485063; --cancel: #8a909c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #080b12;
+  --glow-1: rgba(255, 158, 31, .13);
+  --glow-2: rgba(96, 86, 230, .16);
+  --stars: rgba(255, 255, 255, .55);
+  --surface: #10141d;
+  --surface-2: #171c27;
+  --surface-3: #1f2532;
+  --glass: rgba(14, 18, 26, .72);
+  --ink: #eef1f6;
+  --ink-2: #b4bbc9;
+  --muted: #7a8394;
+  --grid: #1c2230;
+  --axis: #2b3242;
+  --ring: rgba(255, 255, 255, .075);
+  --hl: rgba(255, 173, 51, .10);
+  --lane-alt: rgba(255, 255, 255, .022);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow: 0 1px 1px rgba(0, 0, 0, .35), 0 14px 40px -18px rgba(0, 0, 0, .8);
+  --shadow-lg: 0 24px 70px -20px rgba(0, 0, 0, .9);
+  --accent: #ffad33;
+  --accent-2: #ffd27a;
+  --accent-ink: #1d1200;
+  --accent-soft: rgba(255, 173, 51, .14);
+  --sun-glow: 0 0 0 1px rgba(255, 173, 51, .35), 0 0 28px -4px rgba(255, 166, 31, .6);
+  --c-blue: #3987e5; --c-orange: #d95926; --c-aqua: #199e70; --c-yellow: #c98500;
+  --c-magenta: #d55181; --c-green: #008300; --c-violet: #9085e9; --c-red: #e66767;
+  --neutral: #485063; --cancel: #8a909c;
+}
+
+/* =============================== base =============================== */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  color: var(--ink);
+  font: 14px/1.5 var(--font-ui);
+  background-color: var(--page);
+  background-image:
+    radial-gradient(1100px 520px at 8% -8%, var(--glow-1), transparent 62%),
+    radial-gradient(900px 600px at 105% 0%, var(--glow-2), transparent 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+/* starfield (night only — transparent in dawn) + film grain */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, var(--stars), transparent 60%),
+    radial-gradient(1px 1px at 27% 72%, var(--stars), transparent 60%),
+    radial-gradient(1.4px 1.4px at 46% 12%, var(--stars), transparent 60%),
+    radial-gradient(1px 1px at 63% 44%, var(--stars), transparent 60%),
+    radial-gradient(1.2px 1.2px at 78% 22%, var(--stars), transparent 60%),
+    radial-gradient(1px 1px at 88% 66%, var(--stars), transparent 60%),
+    radial-gradient(1px 1px at 35% 38%, var(--stars), transparent 60%),
+    radial-gradient(1.3px 1.3px at 92% 8%, var(--stars), transparent 60%),
+    radial-gradient(1px 1px at 6% 52%, var(--stars), transparent 60%),
+    radial-gradient(1px 1px at 55% 88%, var(--stars), transparent 60%);
+  opacity: .5;
+}
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .045; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+body > * { position: relative; z-index: 1; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+* { scrollbar-width: thin; scrollbar-color: var(--axis) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--axis); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: .005em; margin: 0; }
+.mono, .tnum { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.sub { color: var(--ink-2); font-size: 13px; }
+
+/* eyebrow: section numbering «01 — ТАЙМЛАЙН» */
+.eyebrow {
+  font-family: var(--font-display); font-size: 12px; font-weight: 600; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 10px;
+}
+.eyebrow::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--accent-soft), transparent); }
+.eyebrow.plain::after { display: none; }
+.section-title { display: flex; align-items: baseline; gap: 12px; margin: 4px 0 14px; flex-wrap: wrap; }
+.section-title h2 { font-size: 22px; }
+.section-title .note { color: var(--muted); font-size: 12.5px; }
+
+/* =============================== components =============================== */
+.card {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, var(--accent) 4%), var(--surface) 120px);
+  border: 1px solid var(--ring); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px;
+}
+.glass { background: var(--glass); backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3); }
+
+button, select, input, textarea {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--surface-2);
+  border: 1px solid var(--ring); border-radius: 999px; padding: 6px 13px; transition: background .15s, border-color .15s, box-shadow .15s;
+}
+input[type=search], textarea, select { border-radius: var(--radius-sm); }
+textarea { border-radius: var(--radius-md); }
+button { cursor: pointer; }
+button:hover { background: var(--hl); border-color: color-mix(in srgb, var(--accent) 35%, var(--ring)); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.on, button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; box-shadow: var(--sun-glow); }
+button.icon { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 10px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--ring); white-space: nowrap; cursor: pointer; user-select: none;
+  transition: background .15s, opacity .15s;
+}
+.chip:hover { background: var(--hl); }
+.chip.on { background: var(--ink); color: var(--surface); border-color: transparent; }
+.chip.off { opacity: .38; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+
+/* brand lockup */
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark { width: 72px; height: 40px; flex: none; overflow: visible; filter: drop-shadow(0 0 10px rgba(255, 166, 31, .35)); }
+.brand-word {
+  font-family: var(--font-display); font-stretch: condensed; font-style: italic; font-weight: 300;
+  font-size: 28px; letter-spacing: .05em; line-height: 1; color: var(--ink);
+}
+.brand-sub {
+  font-family: var(--font-display); font-size: 11px; color: var(--muted); letter-spacing: .2em; text-transform: uppercase;
+  padding-left: 12px; border-left: 1px solid var(--axis); line-height: 1.2;
+}
+
+/* KPI tile */
+.kpi {
+  position: relative; overflow: hidden; background: var(--surface-2); border: 1px solid var(--ring);
+  border-radius: var(--radius-md); padding: 12px 14px 12px;
+}
+.kpi .l { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-family: var(--font-display); }
+.kpi .v { font-family: var(--font-display); font-size: 30px; font-weight: 600; line-height: 1.15; margin-top: 4px; letter-spacing: .01em; }
+.kpi .v small { font-size: 16px; color: var(--muted); font-weight: 400; }
+.kpi .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.kpi .viz { margin-top: 8px; display: block; width: 100%; height: 26px; }
+.kpi.accent { background: linear-gradient(135deg, var(--accent-soft), var(--surface-2) 70%); }
+
+/* verdict stamp */
+.stamp {
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: .14em; font-weight: 700; font-size: 15px;
+  padding: 10px 18px 9px; border: 2px solid currentColor; border-radius: 10px; transform: rotate(-3deg);
+  box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px currentColor; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
+.stamp.solved { color: var(--good); } .stamp.unsolved { color: var(--critical); } .stamp.partial { color: var(--warning); }
+.stamp.abandoned { color: var(--cancel); } .stamp.in_progress, .stamp.none { color: var(--c-blue); }
+
+/* outcome pill (lists) */
+.oc { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; letter-spacing: .02em; }
+.oc::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.oc.solved { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.oc.unsolved { color: var(--critical); background: color-mix(in srgb, var(--critical) 14%, transparent); }
+.oc.partial { color: #a37000; background: color-mix(in srgb, var(--warning) 22%, transparent); }
+.oc.abandoned { color: var(--cancel); background: color-mix(in srgb, var(--cancel) 16%, transparent); }
+.oc.in_progress, .oc.none { color: var(--muted); background: color-mix(in srgb, var(--neutral) 22%, transparent); }
+
+/* tables */
+table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12.5px; }
+th {
+  text-align: left; font-weight: 600; color: var(--muted); font-family: var(--font-display); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  border-bottom: 1px solid var(--axis); padding: 9px 10px; position: sticky; top: 0; background: var(--surface); z-index: 1; white-space: nowrap;
+}
+td { border-bottom: 1px solid var(--grid); padding: 7px 10px; vertical-align: top; }
+td.n, td.t { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.n { text-align: right; } td.t { color: var(--muted); }
+tr.r { cursor: pointer; transition: background .12s; } tr.r:hover td { background: var(--hl); }
+
+/* tooltip & drawer */
+.tip {
+  position: fixed; z-index: 50; pointer-events: none; background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  color: var(--ink); border: 1px solid var(--ring); box-shadow: var(--shadow-lg); border-radius: 12px; padding: 9px 12px; font-size: 12px; max-width: 440px; display: none;
+}
+.tip b { font-weight: 650; } .tip .tm { color: var(--muted); font-size: 11px; font-family: var(--font-mono); }
+
+pre, code { font-family: var(--font-mono); }
+.empty { color: var(--muted); font-size: 13px; padding: 28px; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+
+/* =============================== session page =============================== */
+.wrap { max-width: 1520px; margin: 0 auto; padding: 24px 22px 90px; }
+section { margin-top: 22px; scroll-margin-top: 84px; }
+
+/* hero */
+.hero { padding: 22px 26px 22px; position: relative; overflow: hidden; }
+.hero::before {
+  content: ""; position: absolute; inset: -40% auto auto -10%; width: 620px; height: 420px; pointer-events: none;
+  background: radial-gradient(closest-side, var(--accent-soft), transparent); filter: blur(10px);
+}
+.hero > * { position: relative; }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.hero-main { display: flex; justify-content: space-between; align-items: center; gap: 28px; margin-top: 26px; flex-wrap: wrap; }
+.hero-text { min-width: 0; flex: 1 1 520px; }
+.hero h1 { font-size: clamp(28px, 3.6vw, 46px); line-height: 1.05; margin-top: 8px; letter-spacing: -.005em; }
+.hero .when { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.hero .when .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--axis); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 10px; margin-top: 24px; }
+.hero-foot { display: grid; grid-template-columns: minmax(0, auto) 1fr; gap: 12px; margin-top: 14px; align-items: start; }
+.flagbox {
+  font-family: var(--font-mono); font-size: 13px; padding: 10px 14px; border-radius: var(--radius-md); word-break: break-all;
+  background: linear-gradient(90deg, var(--accent-soft), transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--ring));
+  display: flex; gap: 10px; align-items: center;
+}
+.flagbox b { color: var(--accent); font-family: var(--font-display); letter-spacing: .12em; font-size: 11px; }
+.summary {
+  white-space: pre-wrap; color: var(--ink-2); font-size: 13px; max-height: 4.6em; overflow: hidden; cursor: pointer; padding: 10px 14px;
+  border-radius: var(--radius-md); background: var(--surface-2); border: 1px solid var(--ring);
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent); mask-image: linear-gradient(180deg, #000 60%, transparent);
+}
+.summary.open { max-height: none; -webkit-mask-image: none; mask-image: none; }
+@media (max-width: 800px) { .hero-foot { grid-template-columns: 1fr; } }
+/* embedded in the Explorer: the host app already shows brand + theme switch */
+.embed .hero-top { display: none; }
+.embed .hero-main { margin-top: 0; }
+.embed .wrap { padding-top: 16px; }
+
+/* floating control dock */
+.toolbar {
+  position: sticky; top: 12px; z-index: 20; margin: 22px auto 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding: 7px 8px 7px 18px; border: 1px solid var(--ring); border-radius: 999px; box-shadow: var(--shadow-lg); width: fit-content; max-width: 100%;
+}
+.toolbar .ttl { font-family: var(--font-display); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.toolbar .sep { width: 1px; height: 22px; background: var(--axis); margin: 0 4px; }
+.tnow { font-family: var(--font-mono); font-weight: 600; color: var(--accent); min-width: 78px; font-variant-numeric: tabular-nums; }
+
+/* legends */
+.legend { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); margin: 6px 0 12px; align-items: center; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.kinds { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.hint { color: var(--muted); font-size: 12px; margin-top: 10px; display: flex; gap: 14px; flex-wrap: wrap; }
+.hint kbd { font-family: var(--font-mono); font-size: 11px; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--axis); background: var(--surface-2); }
+
+/* timeline */
+.tl { display: grid; grid-template-columns: 252px 1fr; border: 1px solid var(--ring); border-radius: var(--radius-md); overflow: hidden; background: var(--surface); }
+.tl-labels { border-right: 1px solid var(--grid); background: linear-gradient(90deg, var(--surface-2), var(--surface)); }
+.tl-scroll { overflow-x: auto; overflow-y: hidden; position: relative; }
+#tl { display: block; }
+.lab { display: flex; align-items: center; gap: 9px; padding: 0 12px; font-size: 12px; overflow: hidden; cursor: pointer; transition: background .12s; }
+.lab:hover { background: var(--hl); }
+.lab .role { font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: .06em; min-width: 26px; text-align: center; padding: 2px 5px; border-radius: 6px; color: #fff; flex: none; }
+.lab .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lab .meta { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-mono); }
+.lab.group { font-family: var(--font-display); font-size: 11px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; cursor: default; }
+.lab.group:hover { background: none; }
+svg text { font-family: var(--font-ui); }
+.ax text { font-size: 11px; fill: var(--muted); font-family: var(--font-mono); }
+.mk { cursor: pointer; }
+.mk:hover { filter: brightness(1.18) drop-shadow(0 0 4px var(--accent-soft)); }
+.dim { opacity: .12; }
+#cur { stroke: var(--accent); filter: drop-shadow(0 0 3px var(--accent)); }
+#curh { fill: var(--accent); }
+
+/* DAG */
+.dag-grid { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 14px; align-items: start; }
+.dag-box {
+  border: 1px solid var(--ring); border-radius: var(--radius-md); overflow: auto; min-height: 280px; max-height: 660px; position: relative;
+  background-color: var(--surface);
+  background-image: radial-gradient(circle at 1px 1px, var(--grid) 1px, transparent 0); background-size: 18px 18px;
+}
+.revs { border: 1px solid var(--ring); border-radius: var(--radius-md); background: var(--surface); overflow: auto; max-height: 560px; }
+.rev { display: grid; grid-template-columns: 64px 20px 1fr; gap: 6px; padding: 7px 12px; border-bottom: 1px solid var(--grid); font-size: 12px; cursor: pointer; align-items: start; transition: background .12s; }
+.rev:hover { background: var(--hl); }
+.rev.cur { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.rev.future { opacity: .42; }
+.rev .t { color: var(--muted); font-family: var(--font-mono); font-size: 11.5px; }
+.rev .who { font-weight: 650; }
+.scrub { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.scrub input[type=range] { flex: 1; min-width: 220px; accent-color: var(--accent); background: transparent; border: none; padding: 0; }
+.node { cursor: pointer; }
+.node text { font-size: 11px; fill: var(--ink-2); }
+.node .nid { font-size: 12.5px; font-weight: 650; fill: var(--ink); font-family: var(--font-display); letter-spacing: .02em; }
+@keyframes pulse { 0% { stroke-opacity: .95; } 100% { stroke-opacity: .15; } }
+.changed { animation: pulse 1.1s ease-in-out infinite alternate; }
+
+/* incidents & hypotheses */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.inc {
+  border: 1px solid var(--ring); border-radius: var(--radius-md); padding: 12px 14px 12px 16px; margin-bottom: 10px; cursor: pointer;
+  background: var(--surface); position: relative; overflow: hidden; transition: transform .15s, box-shadow .15s;
+}
+.inc::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--sevc, var(--critical)); }
+.inc:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.inc .tt { font-weight: 650; margin-top: 6px; }
+.inc .d { white-space: pre-wrap; color: var(--ink-2); font-size: 12.5px; margin-top: 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; }
+.sev { font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; color: #fff; }
+.sev.low { background: var(--neutral); color: var(--ink); } .sev.medium { background: var(--warning); color: #1d1200; }
+.sev.high { background: var(--serious); color: #1d1200; } .sev.critical { background: var(--critical); }
+.st { font-size: 11px; padding: 1px 8px; border-radius: 6px; border: 1px solid var(--ring); color: var(--ink-2); }
+.hyp { padding: 10px 12px; border-bottom: 1px solid var(--grid); cursor: pointer; border-radius: 8px; transition: background .12s; }
+.hyp:hover { background: var(--hl); }
+.hyp.refuted .claim { text-decoration: line-through; color: var(--muted); }
+.hyp .claim { margin-top: 4px; }
+h3.mini { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 22px 0 8px; }
+
+/* log */
+.logwrap { max-height: 580px; overflow: auto; border: 1px solid var(--ring); border-radius: var(--radius-md); background: var(--surface); }
+.filters { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+.filters input[type=search] { min-width: 240px; }
+
+/* drawer */
+#drawer {
+  position: fixed; right: 12px; top: 12px; bottom: 12px; width: min(580px, calc(100vw - 24px)); border: 1px solid var(--ring); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); transform: translateX(calc(100% + 24px)); transition: transform .22s cubic-bezier(.2, .8, .2, 1); z-index: 60; display: flex; flex-direction: column;
+}
+#drawer.open { transform: none; }
+#drawer .dh { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--grid); }
+#drawer .dh b { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+#drawer .db { padding: 16px 18px; overflow: auto; font-size: 13px; }
+#drawer pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2); padding: 12px; border-radius: 10px; font-size: 12px; border: 1px solid var(--ring); }
+#drawer h2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 18px 0 8px; }
+.kv { display: grid; grid-template-columns: 116px 1fr; gap: 5px 12px; font-size: 12.5px; }
+.kv div:nth-child(odd) { color: var(--muted); }
+@media (max-width: 960px) { .dag-grid, .two { grid-template-columns: 1fr; } .tl { grid-template-columns: 160px 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="card hero">
+    <div class="hero-top">
+      <div class="brand"><svg class="brand-mark" viewBox="-8 -2 136 76" aria-hidden="true"><defs><radialGradient id="lg-glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffb02e" stop-opacity=".75"/><stop offset=".45" stop-color="#ffa51f" stop-opacity=".35"/><stop offset="1" stop-color="#ff9a00" stop-opacity="0"/></radialGradient></defs><ellipse cx="60" cy="36" rx="34" ry="24" fill="url(#lg-glow)"/><polygon points="60.00,15.50 57.87,22.57 62.13,22.57" fill="#f9a61a"/><polygon points="70.25,18.25 64.87,23.30 68.56,25.43" fill="#f9a61a"/><polygon points="77.75,25.75 70.57,27.44 72.70,31.13" fill="#f9a61a"/><polygon points="80.50,36.00 73.43,33.87 73.43,38.13" fill="#f9a61a"/><polygon points="77.75,46.25 72.70,40.87 70.57,44.56" fill="#f9a61a"/><polygon points="70.25,53.75 68.56,46.57 64.87,48.70" fill="#f9a61a"/><polygon points="60.00,56.50 62.13,49.43 57.87,49.43" fill="#f9a61a"/><polygon points="49.75,53.75 55.13,48.70 51.44,46.57" fill="#f9a61a"/><polygon points="42.25,46.25 49.43,44.56 47.30,40.87" fill="#f9a61a"/><polygon points="39.50,36.00 46.57,38.13 46.57,33.87" fill="#f9a61a"/><polygon points="42.25,25.75 47.30,31.13 49.43,27.44" fill="#f9a61a"/><polygon points="49.75,18.25 51.44,25.43 55.13,23.30" fill="#f9a61a"/><circle cx="60" cy="36" r="12.6" fill="#ffd27a"/><circle cx="60" cy="36" r="11.4" fill="#f7a01b"/><path d="M55,31L65,41M65,31L55,41" stroke="#141414" stroke-width="3.6"/><path d="M5,36Q60,-18 115,36Q60,90 5,36Z" fill="none" stroke="var(--ink)" stroke-width="7" stroke-linejoin="miter"/></svg><span class="brand-word">inslopnia</span><span class="brand-sub">session timeline</span></div>
+      <button id="theme" class="icon" title="Сменить тему (ночь / рассвет)">◐</button>
+    </div>
+    <div class="hero-main">
+      <div class="hero-text">
+        <div class="eyebrow plain" id="h-task"></div>
+        <h1 id="h-title"></h1>
+        <div class="when" id="h-window"></div>
+      </div>
+      <span id="h-verdict" class="stamp"></span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="hero-foot"><div id="h-flag"></div><div class="summary" id="h-summary" title="клик — развернуть"></div></div>
+  </header>
+
+  <div class="toolbar glass">
+    <span class="ttl">Навигация</span>
+    <button id="zout" class="icon" title="Уменьшить (Ctrl+колесо)">−</button>
+    <button id="zfit">Fit</button>
+    <button id="zin" class="icon" title="Увеличить (Ctrl+колесо)">+</button>
+    <span class="sep"></span>
+    <span class="muted" style="font-size:12px">курсор</span><span class="tnow" id="tb-now"></span>
+    <span class="sep"></span>
+    <button id="links" class="on" title="Связи оркестрации P→E и сообщения">связи</button>
+    <button id="clearfocus" style="display:none">✕ фокус</button>
+  </div>
+
+  <section class="card">
+    <div class="eyebrow">01 — оркестрация во времени</div>
+    <div class="section-title"><h2>Таймлайн агентов</h2><span class="note">дорожки, поручения P→E, токены и прогресс DAG на общей оси</span></div>
+    <div class="kinds"><span class="muted" style="font-size:12px;margin-right:4px">типы событий:</span><span id="kindchips" style="display:contents"></span></div>
+    <div class="legend" id="legend"></div>
+    <div class="tl"><div class="tl-labels" id="tl-labels"></div><div class="tl-scroll" id="tl-scroll"><svg id="tl"></svg></div></div>
+    <div class="hint"><span>клик по полосе/маркеру — детали и курсор</span><span>клик по агенту или узлу — фокус на шаге</span><span><kbd>Ctrl</kbd>+колесо — масштаб</span><span><kbd>Esc</kbd> — закрыть панель</span></div>
+  </section>
+
+  <section class="card" id="dag-sec">
+    <div class="eyebrow">02 — план и его ревизии</div>
+    <div class="section-title"><h2>Эволюция DAG</h2><span class="note">состояние графа в момент курсора; ▶ проигрывает историю</span></div>
+    <div class="scrub">
+      <button id="play" class="primary icon" title="Проиграть">▶</button><button id="prev">◀ ревизия</button><button id="next">ревизия ▶</button>
+      <input type="range" id="slider" min="0" max="1000" value="1000">
+      <span class="tnow" id="sl-now"></span>
+      <span class="muted" style="font-size:12px" id="sl-rev"></span>
+    </div>
+    <div class="legend" id="dag-legend"></div>
+    <div class="dag-grid">
+      <div class="dag-box" id="dag-box"><svg id="dag"></svg></div>
+      <div class="revs" id="revs"></div>
+    </div>
+  </section>
+
+  <section class="two">
+    <div class="card">
+      <div class="eyebrow">03 — что сломалось</div>
+      <div class="section-title"><h2>Инциденты и баги</h2><span class="note" id="inc-count"></span></div>
+      <div id="incidents"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">04 — что думали</div>
+      <div class="section-title"><h2>Гипотезы</h2><span class="note" id="hyp-count"></span></div>
+      <div id="hyps"></div>
+      <h3 class="mini">Агенты</h3><div id="agents-tbl"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">05 — всё подряд</div>
+    <div class="section-title"><h2>Журнал событий</h2><span class="note" id="logcount"></span></div>
+    <div class="filters">
+      <input type="search" id="q" placeholder="поиск по событиям…">
+      <select id="fa"><option value="">все агенты</option></select>
+      <select id="fk"><option value="">все типы</option></select>
+    </div>
+    <div class="logwrap"><table><thead><tr><th>T+</th><th>агент</th><th>тип</th><th>шаг</th><th>событие</th><th>токены</th></tr></thead><tbody id="log"></tbody></table></div>
+  </section>
+</div>
+<div id="tip" class="tip"></div>
+<aside id="drawer" class="glass"><div class="dh"><b id="dr-title"></b><button id="dr-close" class="icon">✕</button></div><div class="db" id="dr-body"></div></aside>
+
+<script>
+const M = {"session": {"title": "CTF Cup / forensics,radio,dsp / Chik Chirik", "t": 1793455140.6953368, "task": "chik-chirik", "goal": "Реши CTF-задачу \"Chik Chirik\" (id=chik-chirik, категория/теги: forensics,radio,dsp, тип: static).\nНужен флаг формата ctfcup{...}. Найди флаг и выведи его.\n\n=== Условие задачи ===\n> Ночная смена оставила запись и диагностический передатчик старой системы мониторинга. Показания звучат странно. Сможете восстановить сообщение?\n\n=== Рабочие материалы ===\nВсе файлы раздачи лежат в текущей рабочей папке (workspace). Если есть подпапка work/ — в ней ЧАСТИЧНЫЙ ПРОГРЕСС предыдущих попыток решения (скрипты, промежуточные артефакты, заметки): внимательно изучи его и ПРОДОЛЖАЙ с этого места, не начинай с нуля. Если есть details.md — это официальное условие.\nДля реверса доступны MCP-инструменты IDA (idalib) и отладчик pwndbg; можно запускать gdb/pwntools через bash и WSL.\n\n=== Как завершить ===\nКогда флаг найден (или задача зашла в тупик), заверши прогон. В итоговом summary ОБЯЗАТЕЛЬНО выведи на отдельных строках блок:\nHARNESS_VERDICT: SOLVED|NOT_SOLVED\nFLAG: <точный флаг ctfcup{...} или ->\nПроверь, что флаг соответствует формату ctfcup{...}.\n\n=== ПРОДОЛЖЕНИЕ (round 2) ===\nЭто повторный запуск. В рабочей папке УЖЕ лежит прогресс прошлого прогона: modfn.asm (дизасм функции модуляции transmitter), enc_model.py / rev_model.py / tx_model.py (модели кодера/декодера чирп-символов), def.wav. Транслятор transmitter уже в основном отреверсен. НЕ начинай с нуля — проверь эти модели, доведи демодуляцию capture.wav до конца и извлеки флаг. Сверяйся: кодируется FLAG -> чирп-символы; тебе нужен обратны…", "meta": {"source": "C:\\Users\\Duhamster\\Prog\\insomnia\\harness_experiments\\ctf-runs\\chik-chirik\\run", "model": "zai/glm-5.3", "thinking": "high", "pi": "1.4.0", "max_parallel": 3}, "started": 1793455140.6953368}, "t0": 1793455140.6953368, "t1": 1793458216.228, "agents": [{"id": "P", "role": "P", "model": "zai/glm-5.3", "parent": null, "label": "planner", "tokens": 999478, "input": 55018, "output": 11725, "cache_read": 932735, "cache_write": 0, "cost": 0.371124, "events": 2, "first": 1793455140.6953368, "last": 1793458216.228, "steps": [], "spans": [[1793455140.6953368, 1793458216.228, "running"]]}, {"id": "E:empirical-decoder", "role": "E", "model": "zai/glm-5.3", "parent": "P", "label": "Build and PROVE an end-to-end decoder: ./transmitter <payload> out.wav -> demod ", "tokens": 3286907, "input": 192332, "output": 50968, "cache_read": 3043607, "cache_write": 0, "cost": 1.2848609999999996, "events": 0, "first": 1793455525.0893018, "last": 1793458179.391, "steps": ["empirical-decoder"], "spans": [[1793455525.0893018, 1793458216.228, "running"]]}, {"id": "E:asm-verify", "role": "E", "model": "zai/glm-5.3", "parent": "P", "label": "From the existing disassembly (modfn.asm, tx.asm, disasm.txt) nail down the EXAC", "tokens": 5865955, "input": 481963, "output": 83257, "cache_read": 5300735, "cache_write": 0, "cost": 2.419270000000001, "events": 0, "first": 1793455525.422659, "last": 1793458125.631033, "steps": ["asm-verify"], "spans": [[1793455525.422659, 1793458125.631033, "failed"]]}, {"id": "E:opus_codec_audit", "role": "E", "model": "zai/glm-5.3", "parent": "P", "label": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using exis", "tokens": 20950, "input": 5016, "output": 906, "cache_read": 15028, "cache_write": 0, "cost": 0.0, "events": 0, "first": 1793456408.3256285, "last": 1793456543.901369, "steps": ["opus_codec_audit"], "spans": [[1793456408.3256285, 1793456543.901369, "failed"]]}, {"id": "E:opus_audit2", "role": "E", "model": "zai/glm-5.3", "parent": "P", "label": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using exis", "tokens": 225425, "input": 55184, "output": 5464, "cache_read": 164777, "cache_write": 0, "cost": 0.144141, "events": 0, "first": 1793456622.288021, "last": 1793457195.406427, "steps": ["opus_audit2"], "spans": [[1793456622.288021, 1793457195.406427, "cancelled"]]}, {"id": "E:extract-flag", "role": "E", "model": "zai/glm-5.3", "parent": "P", "label": "Run a FRESH known-payload roundtrip of the real ./transmitter binary through the", "tokens": 11075, "input": 1518, "output": 234, "cache_read": 9323, "cache_write": 0, "cost": 0.005579, "events": 0, "first": 1793458195.6823642, "last": 1793458215.658, "steps": ["extract-flag"], "spans": [[1793458195.6823642, 1793458216.228, "running"]]}, {"id": "E:opus_native_codec", "role": "E", "model": "zai/glm-5.3", "parent": "P", "label": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using exis", "tokens": 0, "input": 0, "output": 0, "cache_read": 0, "cache_write": 0, "cost": 0.0, "events": 0, "first": null, "last": null, "steps": ["opus_native_codec"], "spans": []}, {"id": "operator", "role": "operator", "model": null, "parent": null, "label": null, "tokens": 0, "input": 0, "output": 0, "cache_read": 0, "cache_write": 0, "cost": 0.0, "events": 8, "first": 1793456406.6170418, "last": 1793458153.7221572, "steps": [], "spans": []}, {"id": "runtime", "role": "runtime", "model": null, "parent": null, "label": "supervisor", "tokens": 0, "input": 0, "output": 0, "cache_read": 0, "cache_write": 0, "cost": 0.0, "events": 1, "first": 1793456543.901369, "last": 1793458125.631033, "steps": [], "spans": []}], "nodes": [{"id": "empirical-decoder", "objective": "Build and PROVE an end-to-end decoder: ./transmitter <payload> out.wav -> demod -> symbols -> recovered payload, using known-plaintext/differential experiments with the local transmitter binary.", "deps": [], "assignee": "E:empirical-decoder", "status": "running", "added": 1793455512.1245532, "added_by": "P", "history": [{"t": 1793455512.1245532, "id": "h5", "op": "add", "node": "empirical-decoder", "by": "P", "prev": "pending", "objective": "Build and PROVE an end-to-end decoder: ./transmitter <payload> out.wav -> demod -> symbols -> recovered payload, using known-plaintext/differential experiments with the local transmitter binary.", "deps": [], "assignee": "E:empirical-decoder"}, {"t": 1793455525.0893018, "id": "h8", "op": "status", "node": "empirical-decoder", "by": "P", "status": "running", "prev": "pending", "reason": "attempt 1"}], "attempts": 1, "removed": false, "runs": [[1793455525.0893018, 1793458216.228, "running"]], "task": null, "detail": "Workspace: C:/Users/Duhamster/Prog/insomnia/inslopnia_harness/ctf-runs/chik-chirik/workspace (a WSL/bash-friendly env; transmitter is a Linux ELF - run it via WSL bash if needed). Prior round artifacts already here: demod.py (4-level chirp demod, 2048 samples/symbol, quantizes total freq delta to +-1000/+-2000 Hz), symdump.py, chirp_seg.py, analyze_wav.py, probe_positions.py (statistical known-plaintext probe), s_*.npy (demodulated symbol streams), probe_*.npy, len_*.wav / p*.wav / m*.wav / r*.wav / rnd*.wav (prior transmitter runs), tx_model.py / enc_model.py / rev_model.py (reversed models, partially guesswork). DO NOT restart from scratch - verify and extend.\n\nGoal: a decoder that recovers the payload from the symbol stream WITHOUT knowing the PRNG seed (seed comes from /dev/urandom per run). Method:\n1. Sanity: run ./transmitter with a known payload several times, demod each run; check symbol count is stable and equals the expected count from tx_model.py (ngroups = ceil? bits/3, 7 symbols per group - VERIFY this). Determine which symbol positions are constant across runs with the same payload (data-dependent) vs random (PRNG bits).\n2. Differential mapping: payloads differing in exactly one bit -> find which symbol positions/levels change -> derive the exact symbol-position -> payload-bit mapping and level -> value mapping. Watch out: demod.py's level labels (0..3) may be permuted vs the transmitter's byte values; the parity byte may also depend on data (running parity) - account for cascading parity effects.\n3. Check whether more than 2 bits per symbol are modulated (e.g. start frequency, amplitude) - use symdump.py output on known runs; if the data-carrying positions show >4 distinct states, extend the demod.\n4. Also verify symbol boundary alignment (no preamble/offset in capture.wav vs transmitter output - compare structure of s_cap.npy with your own runs).\n5. Write decoder as decode_sym.py (input: wav path or .npy symbol stream; output: recovered payload bytes) plus a self-test mode: generate >=5 random payloads of various lengths 8..64, run ./transmitter, demod, decode, assert equality; exit 0 on success, nonzero otherwise. Also write WORKLOG_A.md summarizing the established facts (positions, mapping, parity, any corrections to tx_model.py).\nLeave all artifacts in the workspace. Do not modify demod.py's interface destructively - copy/extend if needed.", "reason": "attempt 1"}, {"id": "asm-verify", "objective": "From the existing disassembly (modfn.asm, tx.asm, disasm.txt) nail down the EXACT per-group output byte composition (which bits are PRNG, which carry data, parity semantics) and the symbol->chirp-level mapping; assess whether the payload is recoverable without the PRNG seed.", "deps": [], "assignee": "E:asm-verify", "status": "failed", "added": 1793455512.1246958, "added_by": "P", "history": [{"t": 1793455512.1246958, "id": "h7", "op": "add", "node": "asm-verify", "by": "P", "prev": "pending", "objective": "From the existing disassembly (modfn.asm, tx.asm, disasm.txt) nail down the EXACT per-group output byte composition (which bits are PRNG, which carry data, parity semantics) and the symbol->chirp-level mapping; assess whether the payload is recoverable without the PRNG seed.", "deps": [], "assignee": "E:asm-verify"}, {"t": 1793455525.422659, "id": "h9", "op": "status", "node": "asm-verify", "by": "P", "status": "running", "prev": "pending", "reason": "attempt 1"}, {"t": 1793458125.631033, "id": "h34", "op": "status", "node": "asm-verify", "by": "runtime", "status": "failed", "prev": "running", "reason": "timeout: attempt 1: pi terminated by harness watchdog (wall_timeout)"}], "attempts": 1, "removed": false, "runs": [[1793455525.422659, 1793458125.631033, "failed"]], "task": null, "detail": "Workspace: C:/Users/Duhamster/Prog/insomnia/inslopnia_harness/ctf-runs/chik-chirik/workspace. Read-only-ish analysis step: produce rev_notes.md; do NOT edit demod.py, decode_sym.py or tx_model.py (another agent works on those). You may run ./transmitter and your own throwaway scripts (prefix filenames with b_) for spot checks.\n\nContext: prior round reversed the Jai binary 'transmitter' (non-PIE ELF, .text 0x209ab0..0x258a38). Key functions: encode entry 0x21ed90, WHITEN 0x220750, prng step 0x210f80 (4xu32 state, returns 1 parity bit: parity32(x[3]&0xa361c95b) ^ parity32(x[1]&0x7d284e13)), parity helper 0x20b9b0, rotl 0x20bc90, tables at 0x201170/0x201178/0x201180. Existing guesses in tx_model.py/enc_model.py are PARTIALLY WRONG (e.g. out[i]=(r0<<2)|(r1<<1)|p exceeds 3 but chirp seems 4-level; the '(c0<<4)|(c1<<2)|(c2)' byte is a guess).\n\nDeliverables in rev_notes.md:\n1. Exact structure of the 7 output bytes per 3-bit group: for each byte, which bits come from PRNG stream, which from data bits c0..c2, which from running parity; the exact parity update equation; order of prng.next() calls.\n2. The exact mapping output-byte-value -> chirp parameters (slope/level, maybe start freq): read table 0x201180 ([2,0,3,1]?) and the modulation code (modfn.asm around the symbol loop; encoder writes 2048 samples per symbol with env window and phase = t*symbol_rate + dither). Determine how many distinct symbol values exist (4? 8?) and what physical parameter each maps to.\n3. Verdict: is the payload recoverable from the symbol stream without the PRNG seed (i.e. do data bits appear in clear or only via parity)? If only via parity XOR PRNG, say so explicitly and describe what constraints are known (this changes the whole attack).\n4. Corrected encode() pseudocode precise enough to implement.\nCross-check each conclusion with at least one spot experiment (e.g. patch nothing; run ./transmitter with crafted payloads and compare demod output via existing demod.py imported read-only).", "reason": "timeout: attempt 1: pi terminated by harness watchdog (wall_timeout)"}, {"id": "opus_codec_audit", "objective": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using existing reverse-engineering artifacts.", "deps": [], "assignee": "E:opus_codec_audit", "status": "cancelled", "added": 1793456406.6170418, "added_by": "operator", "history": [{"t": 1793456406.6170418, "id": "h11", "op": "add", "node": "opus_codec_audit", "by": "operator", "prev": "pending", "objective": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using existing reverse-engineering artifacts.", "deps": [], "assignee": "E:opus_codec_audit"}, {"t": 1793456408.3256285, "id": "h15", "op": "status", "node": "opus_codec_audit", "by": "operator", "status": "running", "prev": "pending", "reason": "attempt 1"}, {"t": 1793456543.901369, "id": "h16", "op": "status", "node": "opus_codec_audit", "by": "runtime", "status": "failed", "prev": "running", "reason": "blocked: attempt 1: executor reported TASK_BLOCKED: Workspace inspection tools are unavailable in this run."}, {"t": 1793456612.8935385, "id": "h18", "op": "status", "node": "opus_codec_audit", "by": "P", "status": "cancelled", "prev": "failed", "reason": "Executor reported TASK_BLOCKED: workspace inspection tools unavailable; replacing with a fresh step with full default toolset."}], "attempts": 1, "removed": false, "runs": [[1793456408.3256285, 1793456543.901369, "failed"]], "task": null, "detail": "You are an operator-funded Opus specialist joining the EXISTING Chik Chirik plan. Two E steps empirical-decoder and asm-verify are already working; cooperate with P, do not restart generic recon.\nThe workspace root contains capture.wav, transmitter (Jai ELF), enc_model.py, tx_model.py, tx.py, demod.py, modfn.asm, tx.asm, disasm.txt, s_cap.npy, and many known-input probes. Read these existing models first. The open bottleneck is the exact per-group encoder byte/bit composition and how to invert it, including which bits are PRNG vs payload/parity. Marginal randomness of symbol slopes does NOT prove absence of joint payload information.\nYour deliverable is a proven decoding path: fresh transmitter(known_payload) -> demod -> recovered known_payload, then use the same verified decoder on capture.wav for ctfcup{...}. If unable to finish, provide exact proven facts, counterexamples to current models, and the smallest unresolved expression. No guessed flag.\nUse your OWN opus_audit/ directory; do not edit the other agents' shared models/scripts. Save notes and runnable self-tests incrementally. Report a concrete milestone within a few minutes and check_inbox periodically so P can share the other branches' findings.\nThis is Windows plus WSL Ubuntu. Host Python is 'python'; Linux python3/tools run through WSL. To avoid Git Bash path conversion, invoking wsl.exe via Python subprocess argv is reliable. Do not invent absolute user paths.\nTASK_COMPLETE requires an actual fresh binary/decoder roundtrip, not only a plausible model. TASK_BLOCKED with a saved precise handoff is acceptable. Operator handles board submission; do not access board credentials or modify the harness ledger directly.", "reason": "Executor reported TASK_BLOCKED: workspace inspection tools unavailable; replacing with a fresh step with full default toolset."}, {"id": "opus_audit2", "objective": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using existing reverse-engineering artifacts (replacement for failed opus_codec_audit).", "deps": [], "assignee": "E:opus_audit2", "status": "cancelled", "added": 1793456612.9392502, "added_by": "P", "history": [{"t": 1793456612.9392502, "id": "h20", "op": "add", "node": "opus_audit2", "by": "P", "prev": "pending", "objective": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using existing reverse-engineering artifacts (replacement for failed opus_codec_audit).", "deps": [], "assignee": "E:opus_audit2"}, {"t": 1793456622.288021, "id": "h21", "op": "status", "node": "opus_audit2", "by": "P", "status": "running", "prev": "pending", "reason": "attempt 1"}, {"t": 1793457195.406427, "id": "h27", "op": "status", "node": "opus_audit2", "by": "runtime", "status": "cancelled", "prev": "running", "reason": "cancel requested; agent stopped"}], "attempts": 1, "removed": false, "runs": [[1793456622.288021, 1793457195.406427, "cancelled"]], "task": null, "detail": "Workspace: C:/Users/Duhamster/Prog/insomnia/inslopnia_harness/ctf-runs/chik-chirik/workspace (bash/WSL-friendly; ./transmitter is a Linux ELF). If the 'read' tool is unavailable, inspect files via bash (cat/sed/head) instead.\n\nPrior artifacts to build on (do NOT restart from scratch): demod.py (4-level chirp demod, 2048 samp/symbol, quantizes total freq delta to +-1000/+-2000 Hz), tx_model.py / enc_model.py / rev_model.py (partially-verified reversed models), modfn.asm / tx.asm / disasm.txt (disassembly), randshim.c/.so + rand_seed1.bin (LD_PRELOAD shim that fixes the /dev/urandom seed - another agent's tool, reuse if useful), s_cap.npy (demodulated capture symbols), many s_*.npy / probe_*.npy experiment outputs, expt_cache/.\n\nTwo other agents are concurrently producing: WORKLOG_A.md + decode_sym.py (empirical known-plaintext decoder) and rev_notes.md (exact asm-verified byte layout). Coordinate by FILES: write your findings to opus_notes.md and any scripts prefixed opus_. Do NOT edit demod.py, decode_sym.py, tx_model.py, rev_notes.md, or WORKLOG_A.md.\n\nYour job: independently audit/establish (1) the exact 7-byte-per-3-bit-group composition (PRNG bits vs data bits vs running parity, order of prng calls, prng step function 0x210f80 semantics), (2) the symbol value -> chirp level mapping, (3) whether the payload is recoverable without the PRNG seed, and (4) a working decode path symbols -> payload. Validate every claim with a controlled experiment using ./transmitter (optionally with randshim.so via LD_PRELOAD for a deterministic seed: see shim.log for usage). A roundtrip proof (known payload -> wav -> demod -> decoded payload equals input) is the strongest evidence. Write results to opus_notes.md, including exact file paths of any scripts/artifacts you produce.", "reason": "cancel requested; agent stopped"}, {"id": "opus_native_codec", "objective": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using existing reverse-engineering artifacts.", "deps": [], "assignee": "E:opus_native_codec", "status": "cancelled", "added": 1793457326.3825235, "added_by": "operator", "history": [{"t": 1793457326.3825235, "id": "h29", "op": "add", "node": "opus_native_codec", "by": "operator", "prev": "pending", "objective": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using existing reverse-engineering artifacts.", "deps": [], "assignee": "E:opus_native_codec"}, {"t": 1793458153.6725485, "id": "h36", "op": "status", "node": "opus_native_codec", "by": "operator", "status": "cancelled", "prev": "pending", "reason": "Operator handing control back to Claude before this specialist launch; prepared config retained for the next controller"}], "attempts": 0, "removed": false, "runs": [], "task": null, "detail": "You are an operator-funded Opus specialist joining the EXISTING Chik Chirik plan. Two E steps empirical-decoder and asm-verify are already working; cooperate with P, do not restart generic recon.\nThe workspace root contains capture.wav, transmitter (Jai ELF), enc_model.py, tx_model.py, tx.py, demod.py, modfn.asm, tx.asm, disasm.txt, s_cap.npy, and many known-input probes. Read these existing models first. The open bottleneck is the exact per-group encoder byte/bit composition and how to invert it, including which bits are PRNG vs payload/parity. Marginal randomness of symbol slopes does NOT prove absence of joint payload information.\nYour deliverable is a proven decoding path: fresh transmitter(known_payload) -> demod -> recovered known_payload, then use the same verified decoder on capture.wav for ctfcup{...}. If unable to finish, provide exact proven facts, counterexamples to current models, and the smallest unresolved expression. No guessed flag.\nUse your OWN opus_audit/ directory; do not edit the other agents' shared models/scripts. Save notes and runnable self-tests incrementally. Report a concrete milestone within a few minutes and check_inbox periodically so P can share the other branches' findings.\nThis is Windows plus WSL Ubuntu. Host Python is 'python'; Linux python3/tools run through WSL. To avoid Git Bash path conversion, invoking wsl.exe via Python subprocess argv is reliable. Do not invent absolute user paths.\nTASK_COMPLETE requires an actual fresh binary/decoder roundtrip, not only a plausible model. TASK_BLOCKED with a saved precise handoff is acceptable. Operator handles board submission; do not access board credentials or modify the harness ledger directly.\nThe operator has now validated the native Anthropic provider with real read and bash tools. Invoke native tool calls; do not claim tools are unavailable without a real failing tool result. The previous tool adapter attempt is irrelevant to this new session. Other agents may have newer rev_model.py/enc_model.py edits; read current files and their checkpoints. Your own directory is opus_native/, not the other agents files.", "reason": "Operator handing control back to Claude before this specialist launch; prepared config retained for the next controller"}, {"id": "extract-flag", "objective": "Run a FRESH known-payload roundtrip of the real ./transmitter binary through the full decode chain, then decode capture.wav and extract the ctfcup{...} flag.", "deps": [], "assignee": "E:extract-flag", "status": "running", "added": 1793457346.8340025, "added_by": "P", "history": [{"t": 1793457346.8340025, "id": "h32", "op": "add", "node": "extract-flag", "by": "P", "prev": "pending", "objective": "Run a FRESH known-payload roundtrip of the real ./transmitter binary through the full decode chain, then decode capture.wav and extract the ctfcup{...} flag.", "deps": ["empirical-decoder", "asm-verify"], "assignee": "E:extract-flag"}, {"t": 1793458177.9178154, "id": "h38", "op": "update", "node": "extract-flag", "by": "P", "prev": "pending", "deps": [], "fields": ["deps", "instructions"]}, {"t": 1793458195.6823642, "id": "h39", "op": "status", "node": "extract-flag", "by": "P", "status": "running", "prev": "pending", "reason": "attempt 1"}], "attempts": 1, "removed": false, "runs": [[1793458195.6823642, 1793458216.228, "running"]], "task": null, "detail": "Workspace: C:/Users/Duhamster/Prog/insomnia/inslopnia_harness/ctf-runs/chik-chirik/workspace. NOTE: the asm-verify agent was watchdog-killed after persisting its artifacts (exact_model.py, verify_model.py) - they are on disk and are the ground-truth reversed model, but its final roundtrip run was NOT observed; treat the roundtrip as unproven until you run it. Another agent (empirical-decoder) may still be running; coordinate by files, do not overwrite its outputs (WORKLOG_A.md, decode_sym.py), use your own filenames.\n\nThe encoding is fully modeled in exact_model.py (whiten: out=(r0<<2)|(r1<<1)|p, p=prev^d^r2, MSB-first bits of payload++u32le(len); RS(7,3) over GF(8) poly 0xB, codeword=P(1..7); 8 preamble symbols [0,3,4,7,7,4,3,0]; 8-level chirps: 4 endpoints 4000/5000/7000/8000 Hz from center 6000, 2048 samp @48kHz, polarity = s&1). verify_model.py contains a working 8-level demodulator (template correlation) and the full blind-decode chain including the GF(2) solve for the 128-bit RNG state from the r0/r1 leak.\n\nMANDATORY ORDER (operator directive):\n1. FIRST run a FRESH end-to-end roundtrip on the real binary: python verify_model.py --fresh 2>&1 | tee verify_roundtrip.log. It must print ALL CHECKS PASSED (transmit -> demod8 -> preamble -> RS decode -> GF(2) solve -> blind decode == payload). Do not proceed to capture.wav until this passes; if it fails, debug/fix the chain (compare intermediate stages against a shimmed-seed run using randshim.so if needed) and re-run.\n2. Then decode capture.wav: demod8 -> verify preamble [0,3,4,7,7,4,3,0] (symbol count: nsym = 8 + 7*ngroups; derive payload length n from ngroups, cross-check with the u32le trailer; if the preamble is not at position 0, search for it; RS(7,3) corrects up to 2 symbol errors per group - report per-group error counts) -> RS decode -> GF(2) solve using ALL r0/r1 equations (check consistency/nullspace; optionally constrain with known trailer bits and flag prefix 'ctfcup{') -> unwhiten -> payload bytes.\n3. Validate: payload printable ASCII, starts with ctfcup{ and ends with }, trailer u32le == len(payload). If multiple solutions (nullspace), enumerate candidates and check the format.\n4. Write the exact flag to FLAG.txt (newline-terminated) and the full decode transcript to WORKLOG_FINAL.md (commands, outputs, per-group RS error stats, solved RNG state hex).\nReport the exact flag in your final summary.", "reason": "attempt 1"}], "dag_ops": [{"t": 1793455512.1245532, "id": "h5", "op": "add", "node": "empirical-decoder", "by": "P", "prev": "pending", "objective": "Build and PROVE an end-to-end decoder: ./transmitter <payload> out.wav -> demod -> symbols -> recovered payload, using known-plaintext/differential experiments with the local transmitter binary.", "deps": [], "assignee": "E:empirical-decoder"}, {"t": 1793455512.1246958, "id": "h7", "op": "add", "node": "asm-verify", "by": "P", "prev": "pending", "objective": "From the existing disassembly (modfn.asm, tx.asm, disasm.txt) nail down the EXACT per-group output byte composition (which bits are PRNG, which carry data, parity semantics) and the symbol->chirp-level mapping; assess whether the payload is recoverable without the PRNG seed.", "deps": [], "assignee": "E:asm-verify"}, {"t": 1793455525.0893018, "id": "h8", "op": "status", "node": "empirical-decoder", "by": "P", "status": "running", "prev": "pending", "reason": "attempt 1"}, {"t": 1793455525.422659, "id": "h9", "op": "status", "node": "asm-verify", "by": "P", "status": "running", "prev": "pending", "reason": "attempt 1"}, {"t": 1793456406.6170418, "id": "h11", "op": "add", "node": "opus_codec_audit", "by": "operator", "prev": "pending", "objective": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using existing reverse-engineering artifacts.", "deps": [], "assignee": "E:opus_codec_audit"}, {"t": 1793456408.3256285, "id": "h15", "op": "status", "node": "opus_codec_audit", "by": "operator", "status": "running", "prev": "pending", "reason": "attempt 1"}, {"t": 1793456543.901369, "id": "h16", "op": "status", "node": "opus_codec_audit", "by": "runtime", "status": "failed", "prev": "running", "reason": "blocked: attempt 1: executor reported TASK_BLOCKED: Workspace inspection tools are unavailable in this run."}, {"t": 1793456612.8935385, "id": "h18", "op": "status", "node": "opus_codec_audit", "by": "P", "status": "cancelled", "prev": "failed", "reason": "Executor reported TASK_BLOCKED: workspace inspection tools unavailable; replacing with a fresh step with full default toolset."}, {"t": 1793456612.9392502, "id": "h20", "op": "add", "node": "opus_audit2", "by": "P", "prev": "pending", "objective": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using existing reverse-engineering artifacts (replacement for failed opus_codec_audit).", "deps": [], "assignee": "E:opus_audit2"}, {"t": 1793456622.288021, "id": "h21", "op": "status", "node": "opus_audit2", "by": "P", "status": "running", "prev": "pending", "reason": "attempt 1"}, {"t": 1793457195.406427, "id": "h27", "op": "status", "node": "opus_audit2", "by": "runtime", "status": "cancelled", "prev": "running", "reason": "cancel requested; agent stopped"}, {"t": 1793457326.3825235, "id": "h29", "op": "add", "node": "opus_native_codec", "by": "operator", "prev": "pending", "objective": "Prove the exact Chik Chirik encoding layout and an end-to-end decoder using existing reverse-engineering artifacts.", "deps": [], "assignee": "E:opus_native_codec"}, {"t": 1793457346.8340025, "id": "h32", "op": "add", "node": "extract-flag", "by": "P", "prev": "pending", "objective": "Run a FRESH known-payload roundtrip of the real ./transmitter binary through the full decode chain, then decode capture.wav and extract the ctfcup{...} flag.", "deps": ["empirical-decoder", "asm-verify"], "assignee": "E:extract-flag"}, {"t": 1793458125.631033, "id": "h34", "op": "status", "node": "asm-verify", "by": "runtime", "status": "failed", "prev": "running", "reason": "timeout: attempt 1: pi terminated by harness watchdog (wall_timeout)"}, {"t": 1793458153.6725485, "id": "h36", "op": "status", "node": "opus_native_codec", "by": "operator", "status": "cancelled", "prev": "pending", "reason": "Operator handing control back to Claude before this specialist launch; prepared config retained for the next controller"}, {"t": 1793458177.9178154, "id": "h38", "op": "update", "node": "extract-flag", "by": "P", "prev": "pending", "deps": [], "fields": ["deps", "instructions"]}, {"t": 1793458195.6823642, "id": "h39", "op": "status", "node": "extract-flag", "by": "P", "status": "running", "prev": "pending", "reason": "attempt 1"}], "items": [{"type": "agent", "t": 1793455140.6953368, "agent": "P", "role": "P", "model": "zai/glm-5.3", "label": "planner", "state": "start", "id": "h2", "kind": "agent_start", "title": "P start"}, {"type": "event", "t": 1793456406.7300005, "agent": "operator", "to": "P", "kind": "message", "title": "directive: Operator added opus_codec_audit using claude-opus-4-8. Parallel capacity temporarily raised to 3 for this specialist; leave other work running. Share…", "detail": "Operator added opus_codec_audit using claude-opus-4-8. Parallel capacity temporarily raised to 3 for this specialist; leave other work running. Share exact codec/PRNG findings by paths and use its result. Require fresh known-payload binary roundtrip before decoding capture. Runtime stdout fix is installed and tested for NEW workers; existing processes may still lose their final summaries, so reconcile native pi-sessions and artifacts before repeating work. Do not have E edit ledger status/verified directly. Operator owns board submission.", "id": "h12"}, {"type": "event", "t": 1793456406.7518451, "agent": "operator", "to": "E:empirical-decoder", "kind": "message", "step": "empirical-decoder", "title": "ask → empirical-decoder: Operator added an Opus codec specialist. Please immediately persist and report your exact current encoder/PRNG mapping, runnable model path…", "detail": "Operator added an Opus codec specialist. Please immediately persist and report your exact current encoder/PRNG mapping, runnable model paths, strongest successful/failed binary roundtrip and single blocker. Keep shared files stable; Opus writes only opus_audit/. Focus your remaining work on a discriminating proof rather than restarting broad recon.", "id": "h13"}, {"type": "event", "t": 1793456406.7724526, "agent": "operator", "to": "E:asm-verify", "kind": "message", "step": "asm-verify", "title": "ask → asm-verify: Operator added an Opus codec specialist. Please immediately persist and report your exact current encoder/PRNG mapping, runnable model path…", "detail": "Operator added an Opus codec specialist. Please immediately persist and report your exact current encoder/PRNG mapping, runnable model paths, strongest successful/failed binary roundtrip and single blocker. Keep shared files stable; Opus writes only opus_audit/. Focus your remaining work on a discriminating proof rather than restarting broad recon.", "id": "h14"}, {"type": "incident", "t": 1793456543.901369, "op": "add", "iid": "I-opus_codec_audit-1", "title": "incident I-opus_codec_audit-1: step opus_codec_audit failed (blocked)", "agent": "E:opus_codec_audit", "step": "opus_codec_audit", "severity": "medium", "category": "agent", "detail": "attempt 1: executor reported TASK_BLOCKED: Workspace inspection tools are unavailable in this run.", "status": "open", "auto": true, "id": "h17", "kind": "incident"}, {"type": "event", "t": 1793456890.2110398, "agent": "operator", "to": "P", "kind": "message", "title": "directive: The first Opus worker genuinely returned TASK_BLOCKED after one successful ls and emitted tool-call syntax as plain text. I am testing the native Ant…", "detail": "The first Opus worker genuinely returned TASK_BLOCKED after one successful ls and emitted tool-call syntax as plain text. I am testing the native Anthropic endpoint to fix this adapter issue. Your opus_audit2 replacement uses the default GLM model, despite its name; please do not create more Opus-labelled replacements yourself. I manage Opus launches. Let empirical-decoder and asm-verify continue; have opus_audit2 persist its strongest findings promptly and finish. New runtime correctly preserved the first Opus failure and full summary.", "id": "h22"}, {"type": "event", "t": 1793456890.290346, "agent": "operator", "to": "E:opus_audit2", "kind": "message", "step": "opus_audit2", "title": "stop_dump → opus_audit2: Persist your exact strongest codec findings and current blocker under a unique checkpoint file, report its path, and finish promptly. Opera…", "detail": "Persist your exact strongest codec findings and current blocker under a unique checkpoint file, report its path, and finish promptly. Operator is replacing the specialist slot with a tested native Opus connection; do not repeat broad recon.", "id": "h23"}, {"type": "event", "t": 1793456928.8447042, "agent": "P", "to": "E:opus_audit2", "kind": "message", "step": "opus_audit2", "title": "note → opus_audit2: Operator note: you are running on the default model (name aside); the Opus specialist will be relaunched separately by the operator. Please…", "detail": "Operator note: you are running on the default model (name aside); the Opus specialist will be relaunched separately by the operator. Please persist your strongest findings to opus_notes.md promptly (write early, update as you go) and finish cleanly within your budget rather than exploring exhaustively. Coordinate strictly via files; do not edit other agents' outputs (WORKLOG_A.md, rev_notes.md, decode_sym.py, demod.py, tx_model.py).", "id": "h24"}, {"type": "event", "t": 1793457080.9219658, "agent": "runtime", "to": "E:opus_audit2", "kind": "decision", "step": "opus_audit2", "title": "cancel requested for opus_audit2: stop_dump grace expired", "id": "h25"}, {"type": "event", "t": 1793457137.5353942, "agent": "operator", "to": "P", "kind": "message", "title": "directive: Native Anthropic Opus tool calling now passed an actual Pi test (read unknown nonce -> bash arithmetic -> verified TASK_COMPLETE). Operator will laun…", "detail": "Native Anthropic Opus tool calling now passed an actual Pi test (read unknown nonce -> bash arithmetic -> verified TASK_COMPLETE). Operator will launch a native Opus specialist once opus_audit2 has checkpointed and released the third slot. Do not start additional replacement specialist steps yourself; keep the two core empirical/asm branches moving.", "id": "h26"}, {"type": "event", "t": 1793457326.4437766, "agent": "operator", "to": "P", "kind": "message", "title": "directive: Operator is replacing opus_audit2 after its stop_dump grace with opus_native_codec on the validated native Anthropic Opus connection. Do not start th…", "detail": "Operator is replacing opus_audit2 after its stop_dump grace with opus_native_codec on the validated native Anthropic Opus connection. Do not start this step yourself via default start_agents; I launch its separate Opus-configured runner. Keep the two core branches focused and share checkpoints by path. If a complete fresh binary roundtrip is already proven, report it immediately and prioritize capture decode.", "id": "h30"}, {"type": "event", "t": 1793457476.9116886, "agent": "P", "to": "E:asm-verify", "kind": "message", "step": "asm-verify", "title": "steer → asm-verify: Operator priority request: run the fresh known-payload binary roundtrip NOW (python verify_model.py --fresh, capturing the full output to v…", "detail": "Operator priority request: run the fresh known-payload binary roundtrip NOW (python verify_model.py --fresh, capturing the full output to verify_roundtrip.log in the workspace), and report PASS/FAIL immediately in your summary (or via a fork/answer if you can). A second agent will decode capture.wav as soon as that PASS is on disk. After the roundtrip, write rev_notes.md with the confirmed layout (you can largely reuse exact_model.py's docstring) and finish - don't keep exploring.", "id": "h33"}, {"type": "incident", "t": 1793458125.631033, "op": "add", "iid": "I-asm-verify-1", "title": "incident I-asm-verify-1: step asm-verify failed (timeout)", "agent": "E:asm-verify", "step": "asm-verify", "severity": "high", "category": "harness", "detail": "attempt 1: pi terminated by harness watchdog (wall_timeout)", "status": "open", "auto": true, "id": "h35", "kind": "incident"}, {"type": "event", "t": 1793458153.7221572, "agent": "operator", "to": "P", "kind": "message", "title": "directive: Codex operator is ending its turn at the human request; control is returning to Claude. Keep existing solver work and persisted checkpoints. Do not e…", "detail": "Codex operator is ending its turn at the human request; control is returning to Claude. Keep existing solver work and persisted checkpoints. Do not expect Codex to launch workers or submit flags now. Claude handoff is ../reflection/HANDOFF_TO_CLAUDE.md relative to the repository. The prepared chik opus_native_codec step was cancelled before launch for this handoff; the two core decoder/asm branches remain active. Operator-added Opus configs require native Anthropic ctf-opus provider and OPUS_API_KEY/OPUS_KEY_1..5. A step name containing opus does not prove it uses Opus: default start_agents uses the main GLM snapshot. Never edit ledger status/verified directly.", "id": "h37"}], "usage": [{"t": 1793455199.494, "agent": "P", "tokens": 13337, "cost": 0.004186, "step": null, "input": 543, "output": 24, "cache_read": 12770, "cache_write": 0}, {"t": 1793455244.297, "agent": "P", "tokens": 29520, "cost": 0.017116, "step": null, "input": 4726, "output": 979, "cache_read": 23815, "cache_write": 0}, {"t": 1793455347.826, "agent": "P", "tokens": 16426, "cost": 0.026338, "step": null, "input": 15312, "output": 1114, "cache_read": 0, "cache_write": 0}, {"t": 1793455402.544, "agent": "P", "tokens": 42080, "cost": 0.036411, "step": null, "input": 7188, "output": 4173, "cache_read": 30719, "cache_write": 0}, {"t": 1793455525.632, "agent": "P", "tokens": 50421, "cost": 0.018089, "step": null, "input": 4223, "output": 40, "cache_read": 46158, "cache_write": 0}, {"t": 1793455559.927, "agent": "E:empirical-decoder", "tokens": 34740, "cost": 0.019275, "step": null, "input": 8088, "output": 247, "cache_read": 26405, "cache_write": 0}, {"t": 1793455560.45, "agent": "E:asm-verify", "tokens": 39499, "cost": 0.045684, "step": null, "input": 29732, "output": 367, "cache_read": 9400, "cache_write": 0}, {"t": 1793455599.05, "agent": "E:asm-verify", "tokens": 118346, "cost": 0.093023, "step": null, "input": 16298, "output": 10549, "cache_read": 91499, "cache_write": 0}, {"t": 1793455619.67, "agent": "E:empirical-decoder", "tokens": 60238, "cost": 0.031561, "step": null, "input": 3535, "output": 2867, "cache_read": 53836, "cache_write": 0}, {"t": 1793455656.874, "agent": "E:empirical-decoder", "tokens": 21248, "cost": 0.034595, "step": null, "input": 19632, "output": 1616, "cache_read": 0, "cache_write": 0}, {"t": 1793455736.816, "agent": "E:empirical-decoder", "tokens": 100502, "cost": 0.034556, "step": null, "input": 3280, "output": 1132, "cache_read": 96090, "cache_write": 0}, {"t": 1793455783.971, "agent": "E:asm-verify", "tokens": 120094, "cost": 0.054613, "step": null, "input": 16845, "output": 1011, "cache_read": 102238, "cache_write": 0}, {"t": 1793455791.546, "agent": "E:empirical-decoder", "tokens": 88636, "cost": 0.056405, "step": null, "input": 24967, "output": 1183, "cache_read": 62486, "cache_write": 0}, {"t": 1793455836.821, "agent": "E:empirical-decoder", "tokens": 47179, "cost": 0.020614, "step": null, "input": 1857, "output": 1505, "cache_read": 43817, "cache_write": 0}, {"t": 1793455838.98, "agent": "P", "tokens": 25301, "cost": 0.007186, "step": null, "input": 464, "output": 19, "cache_read": 24818, "cache_write": 0}, {"t": 1793455856.889, "agent": "E:asm-verify", "tokens": 143556, "cost": 0.060474, "step": null, "input": 11987, "output": 2291, "cache_read": 129278, "cache_write": 0}, {"t": 1793455871.658, "agent": "E:asm-verify", "tokens": 84726, "cost": 0.050723, "step": null, "input": 8414, "output": 4614, "cache_read": 71698, "cache_write": 0}, {"t": 1793455914.92, "agent": "E:empirical-decoder", "tokens": 103755, "cost": 0.067297, "step": null, "input": 30063, "output": 1461, "cache_read": 72231, "cache_write": 0}, {"t": 1793455969.065, "agent": "E:empirical-decoder", "tokens": 135921, "cost": 0.042505, "step": null, "input": 3511, "output": 764, "cache_read": 131646, "cache_write": 0}, {"t": 1793455977.367, "agent": "E:asm-verify", "tokens": 180241, "cost": 0.082274, "step": null, "input": 8772, "output": 6138, "cache_read": 165331, "cache_write": 0}, {"t": 1793456040.223, "agent": "E:empirical-decoder", "tokens": 128704, "cost": 0.045725, "step": null, "input": 5636, "output": 1410, "cache_read": 121658, "cache_write": 0}, {"t": 1793456090.894, "agent": "E:empirical-decoder", "tokens": 111137, "cost": 0.04023, "step": null, "input": 4706, "output": 1442, "cache_read": 104989, "cache_write": 0}, {"t": 1793456092.886, "agent": "E:asm-verify", "tokens": 189919, "cost": 0.060097, "step": null, "input": 6366, "output": 836, "cache_read": 182717, "cache_write": 0}, {"t": 1793456125.799, "agent": "E:empirical-decoder", "tokens": 80001, "cost": 0.029299, "step": null, "input": 1605, "output": 1611, "cache_read": 76785, "cache_write": 0}, {"t": 1793456150.351, "agent": "E:asm-verify", "tokens": 208294, "cost": 0.073658, "step": null, "input": 10040, "output": 1946, "cache_read": 196308, "cache_write": 0}, {"t": 1793456153.531, "agent": "P", "tokens": 25383, "cost": 0.007343, "step": null, "input": 529, "output": 34, "cache_read": 24820, "cache_write": 0}, {"t": 1793456162.309, "agent": "P", "tokens": 25978, "cost": 0.008015, "step": null, "input": 474, "output": 174, "cache_read": 25330, "cache_write": 0}, {"t": 1793456202.478, "agent": "E:empirical-decoder", "tokens": 174277, "cost": 0.058494, "step": null, "input": 6802, "output": 1311, "cache_read": 166164, "cache_write": 0}, {"t": 1793456202.512, "agent": "E:asm-verify", "tokens": 330095, "cost": 0.108337, "step": null, "input": 8363, "output": 3135, "cache_read": 318597, "cache_write": 0}, {"t": 1793456250.782, "agent": "E:empirical-decoder", "tokens": 97808, "cost": 0.033815, "step": null, "input": 2899, "output": 1227, "cache_read": 93682, "cache_write": 0}, {"t": 1793456278.542, "agent": "E:asm-verify", "tokens": 239720, "cost": 0.085443, "step": null, "input": 7378, "output": 3552, "cache_read": 228790, "cache_write": 0}, {"t": 1793456339.929, "agent": "E:empirical-decoder", "tokens": 203093, "cost": 0.066036, "step": null, "input": 3218, "output": 2310, "cache_read": 197565, "cache_write": 0}, {"t": 1793456363.638, "agent": "E:empirical-decoder", "tokens": 54213, "cost": 0.023388, "step": null, "input": 1081, "output": 1947, "cache_read": 51185, "cache_write": 0}, {"t": 1793456399.82, "agent": "E:asm-verify", "tokens": 126372, "cost": 0.044935, "step": null, "input": 5071, "output": 1521, "cache_read": 119780, "cache_write": 0}, {"t": 1793456407.834, "agent": "P", "tokens": 26331, "cost": 0.00848, "step": null, "input": 823, "output": 168, "cache_read": 25340, "cache_write": 0}, {"t": 1793456412.684, "agent": "E:empirical-decoder", "tokens": 54663, "cost": 0.018162, "step": null, "input": 2048, "output": 390, "cache_read": 52225, "cache_write": 0}, {"t": 1793456416.651, "agent": "E:opus_codec_audit", "tokens": 16801, "cost": 0.0, "step": null, "input": 1752, "output": 21, "cache_read": 15028, "cache_write": 0}, {"t": 1793456468.611, "agent": "E:opus_codec_audit", "tokens": 4149, "cost": 0.0, "step": null, "input": 3264, "output": 885, "cache_read": 0, "cache_write": 0}, {"t": 1793456481.03, "agent": "P", "tokens": 27332, "cost": 0.008803, "step": null, "input": 1118, "output": 102, "cache_read": 26112, "cache_write": 0}, {"t": 1793456483.099, "agent": "E:asm-verify", "tokens": 128544, "cost": 0.042104, "step": null, "input": 2510, "output": 1406, "cache_read": 124628, "cache_write": 0}, {"t": 1793456490.6, "agent": "E:empirical-decoder", "tokens": 55891, "cost": 0.019852, "step": null, "input": 491, "output": 1150, "cache_read": 54250, "cache_write": 0}, {"t": 1793456520.965, "agent": "E:asm-verify", "tokens": 138434, "cost": 0.062712, "step": null, "input": 6932, "output": 4545, "cache_read": 126957, "cache_write": 0}, {"t": 1793456545.155, "agent": "P", "tokens": 28614, "cost": 0.012223, "step": null, "input": 470, "output": 1026, "cache_read": 27118, "cache_write": 0}, {"t": 1793456569.723, "agent": "E:empirical-decoder", "tokens": 172274, "cost": 0.057392, "step": null, "input": 3598, "output": 2053, "cache_read": 166623, "cache_write": 0}, {"t": 1793456615.706, "agent": "E:empirical-decoder", "tokens": 60214, "cost": 0.021162, "step": null, "input": 1431, "output": 936, "cache_read": 57847, "cache_write": 0}, {"t": 1793456630.076, "agent": "E:asm-verify", "tokens": 148061, "cost": 0.081291, "step": null, "input": 5335, "output": 8868, "cache_read": 133858, "cache_write": 0}, {"t": 1793456635.655, "agent": "P", "tokens": 86241, "cost": 0.024355, "step": null, "input": 1499, "output": 54, "cache_read": 84688, "cache_write": 0}, {"t": 1793456636.312, "agent": "E:opus_audit2", "tokens": 10317, "cost": 0.004866, "step": null, "input": 1498, "output": 115, "cache_read": 8704, "cache_write": 0}, {"t": 1793456682.377, "agent": "E:opus_audit2", "tokens": 26693, "cost": 0.014733, "step": null, "input": 5623, "output": 334, "cache_read": 20736, "cache_write": 0}, {"t": 1793456726.894, "agent": "E:opus_audit2", "tokens": 25391, "cost": 0.014803, "step": null, "input": 4750, "output": 673, "cache_read": 19968, "cache_write": 0}, {"t": 1793456759.351, "agent": "E:empirical-decoder", "tokens": 65759, "cost": 0.033801, "step": null, "input": 3554, "output": 3056, "cache_read": 59149, "cache_write": 0}, {"t": 1793456781.363, "agent": "E:opus_audit2", "tokens": 22337, "cost": 0.021506, "step": null, "input": 7575, "output": 1706, "cache_read": 13056, "cache_write": 0}, {"t": 1793456818.116, "agent": "E:asm-verify", "tokens": 104805, "cost": 0.164136, "step": null, "input": 99002, "output": 5803, "cache_read": 0, "cache_write": 0}, {"t": 1793456833.787, "agent": "E:opus_audit2", "tokens": 23471, "cost": 0.011843, "step": null, "input": 2214, "output": 777, "cache_read": 20480, "cache_write": 0}, {"t": 1793456866.276, "agent": "E:empirical-decoder", "tokens": 66888, "cost": 0.024675, "step": null, "input": 3310, "output": 848, "cache_read": 62730, "cache_write": 0}, {"t": 1793456919.643, "agent": "E:empirical-decoder", "tokens": 67527, "cost": 0.020848, "step": null, "input": 969, "output": 528, "cache_read": 66030, "cache_write": 0}, {"t": 1793456927.358, "agent": "E:opus_audit2", "tokens": 54229, "cost": 0.026293, "step": null, "input": 4355, "output": 1746, "cache_read": 48128, "cache_write": 0}, {"t": 1793456928.922, "agent": "P", "tokens": 58520, "cost": 0.016952, "step": null, "input": 743, "output": 215, "cache_read": 57562, "cache_write": 0}, {"t": 1793456938.331, "agent": "E:asm-verify", "tokens": 154115, "cost": 0.051676, "step": null, "input": 4650, "output": 1523, "cache_read": 147942, "cache_write": 0}, {"t": 1793456948.375, "agent": "E:empirical-decoder", "tokens": 68316, "cost": 0.020493, "step": null, "input": 1179, "output": 335, "cache_read": 66802, "cache_write": 0}, {"t": 1793456990.301, "agent": "E:opus_audit2", "tokens": 28422, "cost": 0.03401, "step": null, "input": 23144, "output": 57, "cache_read": 5221, "cache_write": 0}, {"t": 1793457008.278, "agent": "E:opus_audit2", "tokens": 34565, "cost": 0.016087, "step": null, "input": 6025, "output": 56, "cache_read": 28484, "cache_write": 0}, {"t": 1793457057.167, "agent": "E:asm-verify", "tokens": 468671, "cost": 0.14467, "step": null, "input": 2735, "output": 4758, "cache_read": 461178, "cache_write": 0}, {"t": 1793457138.642, "agent": "P", "tokens": 29473, "cost": 0.00815, "step": null, "input": 267, "output": 44, "cache_read": 29162, "cache_write": 0}, {"t": 1793457173.13, "agent": "E:asm-verify", "tokens": 159379, "cost": 0.046488, "step": null, "input": 4204, "output": 62, "cache_read": 155113, "cache_write": 0}, {"t": 1793457213.01, "agent": "P", "tokens": 60714, "cost": 0.018302, "step": null, "input": 1710, "output": 137, "cache_read": 58867, "cache_write": 0}, {"t": 1793457240.024, "agent": "E:asm-verify", "tokens": 323240, "cost": 0.096929, "step": null, "input": 2051, "output": 2548, "cache_read": 318641, "cache_write": 0}, {"t": 1793457267.33, "agent": "P", "tokens": 39336, "cost": 0.024006, "step": null, "input": 6759, "output": 1467, "cache_read": 31110, "cache_write": 0}, {"t": 1793457287.093, "agent": "E:asm-verify", "tokens": 164012, "cost": 0.049328, "step": null, "input": 1593, "output": 1176, "cache_read": 161243, "cache_write": 0}, {"t": 1793457333.154, "agent": "E:asm-verify", "tokens": 166118, "cost": 0.052562, "step": null, "input": 1484, "output": 1855, "cache_read": 162779, "cache_write": 0}, {"t": 1793457351.243, "agent": "P", "tokens": 0, "cost": 0.0, "step": null, "input": 0, "output": 0, "cache_read": 0, "cache_write": 0}, {"t": 1793457410.861, "agent": "E:asm-verify", "tokens": 166779, "cost": 0.047602, "step": null, "input": 2335, "output": 381, "cache_read": 164063, "cache_write": 0}, {"t": 1793457438.485, "agent": "E:empirical-decoder", "tokens": 72977, "cost": 0.035336, "step": null, "input": 1649, "output": 3498, "cache_read": 67830, "cache_write": 0}, {"t": 1793457450.67, "agent": "E:asm-verify", "tokens": 269140, "cost": 0.191024, "step": null, "input": 101490, "output": 1292, "cache_read": 166358, "cache_write": 0}, {"t": 1793457477.039, "agent": "P", "tokens": 159419, "cost": 0.047209, "step": null, "input": 2870, "output": 601, "cache_read": 155948, "cache_write": 0}, {"t": 1793457515.508, "agent": "E:asm-verify", "tokens": 341014, "cost": 0.107568, "step": null, "input": 2311, "output": 3930, "cache_read": 334773, "cache_write": 0}, {"t": 1793457522.782, "agent": "E:empirical-decoder", "tokens": 76382, "cost": 0.034655, "step": null, "input": 4706, "output": 2278, "cache_read": 69398, "cache_write": 0}, {"t": 1793457571.926, "agent": "E:empirical-decoder", "tokens": 77846, "cost": 0.026504, "step": null, "input": 3236, "output": 622, "cache_read": 73988, "cache_write": 0}, {"t": 1793457582.886, "agent": "E:asm-verify", "tokens": 174492, "cost": 0.056631, "step": null, "input": 3913, "output": 1643, "cache_read": 168936, "cache_write": 0}, {"t": 1793457646.21, "agent": "E:empirical-decoder", "tokens": 166247, "cost": 0.066704, "step": null, "input": 5405, "output": 4183, "cache_read": 156659, "cache_write": 0}, {"t": 1793457648.803, "agent": "E:asm-verify", "tokens": 351588, "cost": 0.102039, "step": null, "input": 2345, "output": 1921, "cache_read": 347322, "cache_write": 0}, {"t": 1793457704.826, "agent": "E:asm-verify", "tokens": 178869, "cost": 0.057795, "step": null, "input": 1477, "output": 2320, "cache_read": 175072, "cache_write": 0}, {"t": 1793457736.611, "agent": "E:empirical-decoder", "tokens": 87495, "cost": 0.033228, "step": null, "input": 3498, "output": 1568, "cache_read": 82429, "cache_write": 0}, {"t": 1793457799.904, "agent": "P", "tokens": 81977, "cost": 0.023951, "step": null, "input": 1983, "output": 91, "cache_read": 79903, "cache_write": 0}, {"t": 1793457818.638, "agent": "E:empirical-decoder", "tokens": 183744, "cost": 0.058633, "step": null, "input": 9355, "output": 47, "cache_read": 174342, "cache_write": 0}, {"t": 1793457835.49, "agent": "E:asm-verify", "tokens": 361115, "cost": 0.105436, "step": null, "input": 4212, "output": 1629, "cache_read": 355274, "cache_write": 0}, {"t": 1793457888.035, "agent": "E:empirical-decoder", "tokens": 100171, "cost": 0.032321, "step": null, "input": 5426, "output": 22, "cache_read": 94723, "cache_write": 0}, {"t": 1793457898.416, "agent": "E:asm-verify", "tokens": 0, "cost": 0.0, "step": null, "input": 0, "output": 0, "cache_read": 0, "cache_write": 0}, {"t": 1793457941.163, "agent": "E:empirical-decoder", "tokens": 111735, "cost": 0.058528, "step": null, "input": 6232, "output": 5404, "cache_read": 100099, "cache_write": 0}, {"t": 1793457954.431, "agent": "E:asm-verify", "tokens": 104081, "cost": 0.1485, "step": null, "input": 103152, "output": 929, "cache_read": 0, "cache_write": 0}, {"t": 1793458007.66, "agent": "E:asm-verify", "tokens": 182636, "cost": 0.051518, "step": null, "input": 966, "output": 708, "cache_read": 180962, "cache_write": 0}, {"t": 1793458073.573, "agent": "E:empirical-decoder", "tokens": 116179, "cost": 0.043718, "step": null, "input": 9183, "output": 735, "cache_read": 106261, "cache_write": 0}, {"t": 1793458120.093, "agent": "E:empirical-decoder", "tokens": 119663, "cost": 0.039661, "step": null, "input": 2988, "output": 1242, "cache_read": 115433, "cache_write": 0}, {"t": 1793458126.963, "agent": "P", "tokens": 84954, "cost": 0.028054, "step": null, "input": 774, "output": 1228, "cache_read": 82952, "cache_write": 0}, {"t": 1793458179.391, "agent": "E:empirical-decoder", "tokens": 121484, "cost": 0.035393, "step": null, "input": 3194, "output": 40, "cache_read": 118250, "cache_write": 0}, {"t": 1793458200.458, "agent": "P", "tokens": 88121, "cost": 0.025955, "step": null, "input": 2543, "output": 35, "cache_read": 85543, "cache_write": 0}, {"t": 1793458215.658, "agent": "E:extract-flag", "tokens": 11075, "cost": 0.005579, "step": null, "input": 1518, "output": 234, "cache_read": 9323, "cache_write": 0}, {"t": 1793458216.228, "agent": "P", "tokens": 0, "cost": 0.0, "step": null, "input": 0, "output": 0, "cache_read": 0, "cache_write": 0}], "hyps": [], "incidents": [{"id": "I-opus_codec_audit-1", "title": "step opus_codec_audit failed (blocked)", "severity": "medium", "category": "agent", "status": "open", "created": 1793456543.901369, "history": [{"t": 1793456543.901369, "op": "add", "note": null, "status": "open"}], "agent": "E:opus_codec_audit", "step": "opus_codec_audit", "detail": "attempt 1: executor reported TASK_BLOCKED: Workspace inspection tools are unavailable in this run.", "auto": true}, {"id": "I-asm-verify-1", "title": "step asm-verify failed (timeout)", "severity": "high", "category": "harness", "status": "open", "created": 1793458125.631033, "history": [{"t": 1793458125.631033, "op": "add", "note": null, "status": "open"}], "agent": "E:asm-verify", "step": "asm-verify", "detail": "attempt 1: pi terminated by harness watchdog (wall_timeout)", "auto": true}], "flags": [], "outcomes": [], "tasks": {}, "final": null, "phases": [], "totals": {"tokens": 10409790, "cost": 4.224975000000001, "events": 14, "nodes": {"running": 2, "failed": 1, "cancelled": 3}, "agents": 9, "incidents_open": 2, "incidents": 2, "input": 791031, "output": 152554, "cache_read": 9466205}};
+(function(){
+"use strict";
+const t0 = M.t0, t1 = Math.max(M.t1, M.t0 + 1), SPAN = t1 - t0;
+const $ = s => document.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+function S(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs||{}) if(attrs[k]!=null) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+function H(tag, attrs, parent, text){ const e=document.createElement(tag); for(const k in attrs||{}) if(attrs[k]!=null) e.setAttribute(k,attrs[k]); if(text!=null) e.textContent=text; if(parent) parent.appendChild(e); return e; }
+const rel = t => { if(t < t0-0.5) return "-"+rel(2*t0-t); let s=Math.max(0,Math.round(t-t0)); const h=Math.floor(s/3600); s-=h*3600; const m=Math.floor(s/60); s-=m*60; return (h? h+":"+String(m).padStart(2,"0") : String(m).padStart(2,"0"))+":"+String(s).padStart(2,"0"); };
+const abs = t => new Date(t*1000).toLocaleString();
+const dur = s => { s=Math.max(0,Math.round(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return h? `${h}ч ${String(m).padStart(2,"0")}м` : m? `${m}м ${String(x).padStart(2,"0")}с` : `${x}с`; };
+const tok = n => { n=n||0; return n>=1e6? (n/1e6).toFixed(2)+"M" : n>=1e3? (n/1e3).toFixed(1)+"k" : String(Math.round(n)); };
+const money = n => "$"+(n||0).toFixed(2);
+const clip = (s,n) => !s? "" : (s.length>n? s.slice(0,n-1)+"…" : s);
+
+const ROLE = {P:["var(--c-violet)","Планировщик P"],E:["var(--c-aqua)","Исполнитель E"],R:["var(--c-yellow)","Исследователь R"],C:["var(--c-magenta)","Критик C"],operator:["var(--c-orange)","Оператор"],runtime:["var(--muted)","Runtime"],other:["var(--c-blue)","Другое"]};
+const ROLE_SHORT = {operator:"OP",runtime:"RT",other:"?"};
+const STATUS = {pending:["var(--neutral)","ожидает","·"],running:["var(--c-blue)","выполняется","▶"],done:["var(--good)","готово","✓"],failed:["var(--critical)","провал","✗"],cancelled:["var(--cancel)","отменён","⊘"],blocked:["var(--warning)","блок","■"],removed:["var(--cancel)","удалён","⌫"],active:["var(--c-violet)","активен","●"],killed:["var(--critical)","убит","✗"]};
+const KIND = {
+  action:["var(--c-blue)","действие","circle"], observation:["var(--c-aqua)","наблюдение","ring"], decision:["var(--c-violet)","решение","diamond"],
+  hypothesis:["var(--c-yellow)","гипотеза","square"], milestone:["var(--c-green)","веха","tri"], message:["var(--c-orange)","сообщение","circle-s"],
+  result:["var(--good)","результат","check"], tool:["var(--muted)","инструмент","dot"], error:["var(--critical)","ошибка","x"],
+  note:["var(--muted)","заметка","ring-s"], incident:["var(--critical)","инцидент","warn"], flag:["var(--c-magenta)","флаг","flag"],
+  outcome:["var(--good)","вердикт","star"], agent_start:["var(--muted)","старт агента","dot"], agent_stop:["var(--muted)","стоп агента","dot"]
+};
+const kindOf = k => KIND[k] || ["var(--c-blue)", k||"?", "circle"];
+const VERD = {solved:"РЕШЕНО ✓",unsolved:"НЕ РЕШЕНО ✗",partial:"ЧАСТИЧНО ◐",in_progress:"В ПРОЦЕССЕ …",abandoned:"БРОШЕНО ⊘"};
+
+/* ---------- header ---------- */
+const ses = M.session, fin = M.final, T = M.totals;
+$("#h-title").textContent = ses.title || "Session";
+$("#h-task").textContent = [ses.task, ses.meta && ses.meta.model, ses.meta && ses.meta.thinking && ("thinking "+ses.meta.thinking)].filter(Boolean).join("  ·  ");
+(function(){ const w=$("#h-window"); const f=t=>new Date(t*1000).toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+  [f(t0),"→",f(t1)].forEach((x,i)=>{ if(i) H("span",{class:"dot"},w); H("span",{},w,x); }); })();
+const vEl = $("#h-verdict"); const vs = fin? fin.status : "none";
+vEl.className = "stamp "+vs; vEl.textContent = fin? (VERD[vs]||vs.toUpperCase()) : "НЕТ ВЕРДИКТА";
+const nodesC = T.nodes||{}; const nTot = Object.values(nodesC).reduce((a,b)=>a+b,0);
+const hypC = {}; M.hyps.forEach(h=>hypC[h.status]=(hypC[h.status]||0)+1);
+const SVGNS="http://www.w3.org/2000/svg";
+const kpi = (l,v,s,viz,cls) => { const d=H("div",{class:"kpi"+(cls?" "+cls:"")},$("#kpis")); H("div",{class:"l"},d,l); const vv=H("div",{class:"v"},d); vv.innerHTML=v; if(s) H("div",{class:"s"},d,s); if(viz) d.appendChild(viz); return d; };
+const vizSvg = () => { const e=document.createElementNS(SVGNS,"svg"); e.setAttribute("class","viz"); e.setAttribute("viewBox","0 0 100 26"); e.setAttribute("preserveAspectRatio","none"); return e; };
+// tokens: cumulative sparkline
+const tokViz=(()=>{ if(!M.usage.length) return null; const u=M.usage.slice().sort((a,b)=>a.t-b.t); let c=0; const pts=[[0,26]];
+  u.forEach(x=>{ c+=x.tokens||0; pts.push([100*(x.t-t0)/SPAN, 26-24*c/Math.max(1,T.tokens)]); }); pts.push([100,pts[pts.length-1][1]]);
+  const e=vizSvg(); const id="tg"+Math.random().toString(36).slice(2,7);
+  e.innerHTML=`<defs><linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".45"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>`+
+    `<path d="M${pts.map(p=>p.join(",")).join("L")}L100,26Z" fill="url(#${id})"/><path d="M${pts.slice(1).map(p=>p.join(",")).join("L")}" fill="none" stroke="var(--accent)" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`; return e; })();
+// dag: status bar
+const dagViz=(()=>{ if(!nTot) return null; const e=vizSvg(); let x=0; ["done","running","blocked","pending","failed","cancelled","removed"].forEach(k=>{ const n=nodesC[k]||0; if(!n) return;
+  const w=100*n/nTot; const r=document.createElementNS(SVGNS,"rect"); r.setAttribute("x",x); r.setAttribute("y",9); r.setAttribute("width",Math.max(w-1,.5)); r.setAttribute("height",8); r.setAttribute("rx",2);
+  r.setAttribute("fill",(STATUS[k]||STATUS.pending)[0]); e.appendChild(r); x+=w; }); return e; })();
+// incidents: severity dots
+const incViz=(()=>{ if(!M.incidents.length) return null; const e=vizSvg(); e.setAttribute("viewBox",`0 0 ${Math.max(100,M.incidents.length*11)} 26`); e.setAttribute("preserveAspectRatio","xMinYMid meet");
+  const SC={low:"var(--neutral)",medium:"var(--warning)",high:"var(--serious)",critical:"var(--critical)"};
+  M.incidents.slice().sort((a,b)=>a.created-b.created).forEach((i,k)=>{ const c=document.createElementNS(SVGNS,"circle"); c.setAttribute("cx",5+k*11); c.setAttribute("cy",13); c.setAttribute("r",4.2);
+    const open=i.status==="open"||i.status==="investigating"; c.setAttribute("fill",open?SC[i.severity]||SC.medium:"none"); c.setAttribute("stroke",SC[i.severity]||SC.medium); c.setAttribute("stroke-width",1.6); e.appendChild(c); }); return e; })();
+// duration: phases strip
+const phViz=(()=>{ if(!M.phases.length) return null; const e=vizSvg(); const cs=["var(--c-blue)","var(--c-orange)","var(--c-aqua)","var(--c-violet)"];
+  M.phases.forEach((p,i)=>{ const r=document.createElementNS(SVGNS,"rect"); r.setAttribute("x",100*(p.start-t0)/SPAN); r.setAttribute("y",9); r.setAttribute("width",Math.max(.8,100*(p.end-p.start)/SPAN-.6)); r.setAttribute("height",8); r.setAttribute("rx",2); r.setAttribute("fill",cs[i%4]); r.setAttribute("opacity",.8); e.appendChild(r); }); return e; })();
+const big = (a,b) => `${a}${b!=null?` <small>${b}</small>`:""}`;
+kpi("Длительность", dur(SPAN), M.phases.length? M.phases.map(p=>p.name).join(" → ") : null, phViz);
+kpi("Токены", tok(T.tokens), `in ${tok(T.input)} · out ${tok(T.output)} · cache ${tok(T.cache_read)}`, tokViz, "accent");
+kpi("Стоимость", money(T.cost), M.agents.length? `≈ ${money(T.cost/Math.max(1,SPAN/3600))}/ч` : null);
+kpi("Агенты", String(T.agents), Object.entries(M.agents.reduce((a,x)=>(a[x.role]=(a[x.role]||0)+1,a),{})).map(([r,c])=>`${ROLE_SHORT[r]||r}×${c}`).join(" "));
+kpi("Узлы DAG", nTot? big(nodesC.done||0,"/ "+nTot) : "—", Object.entries(nodesC).filter(([k])=>k!=="done").map(([k,v])=>`${(STATUS[k]||[0,k])[1]} ${v}`).join(" · ") || (nTot? "все готовы":""), dagViz);
+kpi("Инциденты", big(T.incidents_open,"/ "+T.incidents), "открыто / всего", incViz);
+kpi("Гипотезы", String(M.hyps.length), Object.entries(hypC).map(([k,v])=>`${k} ${v}`).join(" · "));
+const flagVal = (fin && fin.flag) || (M.flags.filter(f=>f.status==="accepted").slice(-1)[0]||{}).value;
+if(flagVal){ const fb=H("div",{class:"flagbox"},$("#h-flag")); H("b",{},fb,"FLAG"); H("span",{},fb,flagVal); } else { $("#h-flag").remove(); document.querySelector(".hero-foot").style.gridTemplateColumns="1fr"; }
+if(fin && fin.summary){ const s=$("#h-summary"); s.textContent=fin.summary; s.onclick=()=>s.classList.toggle("open"); } else $("#h-summary").remove();
+if(!flagVal && !(fin && fin.summary)) document.querySelector(".hero-foot").remove();
+
+/* ---------- shared state ---------- */
+let zoom = 1, cursor = t1, focusStep = null, showLinks = true;
+const hiddenKinds = new Set(["agent_start","agent_stop"]);
+const tip = $("#tip");
+function showTip(ev, html){ tip.innerHTML = html; tip.style.display="block"; const r=tip.getBoundingClientRect(); let x=ev.clientX+14, y=ev.clientY+14; if(x+r.width>innerWidth-8) x=ev.clientX-r.width-14; if(y+r.height>innerHeight-8) y=ev.clientY-r.height-14; tip.style.left=x+"px"; tip.style.top=y+"px"; }
+function hideTip(){ tip.style.display="none"; }
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- DAG replay ---------- */
+const OPS = M.dag_ops.slice().sort((a,b)=>a.t-b.t);
+function dagAt(T){
+  const st = {}; let last = -1;
+  OPS.forEach((o,i)=>{ if(o.t> T + 1e-6) return; last=i;
+    let n = st[o.node]; if(!n) n = st[o.node] = {id:o.node, status:"pending", deps:[], objective:"", assignee:null, attempts:0, removed:false, reason:null, touched:o.t};
+    if(o.objective) n.objective=o.objective; if(o.assignee) n.assignee=o.assignee;
+    if(o.deps && (o.op==="add"||o.op==="update")) n.deps=o.deps.slice();
+    if(o.op==="dep_add") (o.deps||[]).forEach(d=>{ if(!n.deps.includes(d)) n.deps.push(d); });
+    if(o.op==="dep_rm") n.deps=n.deps.filter(d=>!(o.deps||[]).includes(d));
+    if(o.op==="status"){ n.status=o.status; if(o.status==="running") n.attempts++; n.reason=o.reason||null; }
+    if(o.op==="remove") n.removed=true;
+    n.touched=o.t; n.lastOp=o;
+  });
+  return {nodes:st, last};
+}
+
+/* ---------- timeline ---------- */
+const LANE_H = 34, AX_H = 30, PH_H = M.phases.length? 22 : 0, TOK_H = 130, PROG_H = 96, GAP = 14, PADL = 14, PADR = 24;
+const lanes = M.agents.map(a=>a.id); const laneIdx = {}; lanes.forEach((a,i)=>laneIdx[a]=i);
+const lanesTop = AX_H + PH_H + 4;
+const laneY = a => lanesTop + laneIdx[a]*LANE_H + LANE_H/2;
+const lanesBottom = lanesTop + lanes.length*LANE_H;
+const tokTop = lanesBottom + GAP + 18, progTop = tokTop + TOK_H + GAP + 18;
+const TOTAL_H = progTop + PROG_H + 26;
+let W = 1000; const X = t => PADL + (t - t0)/SPAN * (W - PADL - PADR);
+const tAtX = x => t0 + (x - PADL)/(W - PADL - PADR) * SPAN;
+
+// precomputed series
+const NS_ = 320;
+const sampleT = Array.from({length:NS_+1},(_,i)=>t0 + SPAN*i/NS_);
+const rolesPresent = [...new Set(M.agents.map(a=>a.role))];
+const tokSeries = (()=>{ const u=M.usage.slice().sort((a,b)=>a.t-b.t); const agRole={}; M.agents.forEach(a=>agRole[a.id]=a.role);
+  const cum={}, cost={}; rolesPresent.forEach(r=>{cum[r]=0;cost[r]=0;}); let j=0; const out=[];
+  sampleT.forEach(t=>{ while(j<u.length && u[j].t<=t){ const r=agRole[u[j].agent]||"other"; cum[r]=(cum[r]||0)+(u[j].tokens||0); cost[r]=(cost[r]||0)+(u[j].cost||0); j++; } out.push({t, v:{...cum}, c:Object.values(cost).reduce((a,b)=>a+b,0)}); });
+  return out; })();
+const progSeries = sampleT.map(t=>{ const s=dagAt(t).nodes; const c={}; Object.values(s).forEach(n=>{ const k=n.removed?"cancelled":n.status; c[k]=(c[k]||0)+1; }); return {t,c}; });
+const PROG_ORDER = ["done","running","blocked","pending","failed","cancelled"];
+
+function niceStep(px){ const target = SPAN * 110 / px; const steps=[1,2,5,10,15,30,60,120,300,600,900,1800,3600,7200,10800,21600,43200,86400]; return steps.find(s=>s>=target)||86400; }
+
+function marker(g, kind, x, y, color, sz){
+  const s = sz||5.5;
+  switch(kind){
+    case "ring": return S("circle",{cx:x,cy:y,r:s-0.5,fill:"var(--surface)",stroke:color,"stroke-width":2},g);
+    case "ring-s": return S("circle",{cx:x,cy:y,r:s-2,fill:"var(--surface)",stroke:color,"stroke-width":1.5},g);
+    case "circle-s": return S("circle",{cx:x,cy:y,r:s-1.5,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+    case "dot": return S("circle",{cx:x,cy:y,r:2.5,fill:color},g);
+    case "diamond": return S("path",{d:`M${x},${y-s-1}L${x+s+1},${y}L${x},${y+s+1}L${x-s-1},${y}Z`,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+    case "square": return S("rect",{x:x-s+1,y:y-s+1,width:2*s-2,height:2*s-2,rx:2,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+    case "tri": return S("path",{d:`M${x},${y-s-1}L${x+s+1},${y+s}L${x-s-1},${y+s}Z`,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+    case "check": { const gg=S("g",{},g); S("circle",{cx:x,cy:y,r:s+0.5,fill:color,stroke:"var(--surface)","stroke-width":1.5},gg); S("path",{d:`M${x-3},${y}l2,2.3l4,-4.6`,fill:"none",stroke:"#fff","stroke-width":1.8,"stroke-linecap":"round"},gg); return gg; }
+    case "x": { const gg=S("g",{},g); S("circle",{cx:x,cy:y,r:s+0.5,fill:color,stroke:"var(--surface)","stroke-width":1.5},gg); S("path",{d:`M${x-2.6},${y-2.6}l5.2,5.2M${x+2.6},${y-2.6}l-5.2,5.2`,stroke:"#fff","stroke-width":1.8,"stroke-linecap":"round"},gg); return gg; }
+    case "warn": { const gg=S("g",{},g); S("path",{d:`M${x},${y-8}L${x+8},${y+6}L${x-8},${y+6}Z`,fill:color,stroke:"var(--surface)","stroke-width":1.5,"stroke-linejoin":"round"},gg); S("text",{x:x,y:y+4.5,"text-anchor":"middle","font-size":10,"font-weight":800,fill:"#fff"},gg).textContent="!"; return gg; }
+    case "flag": { const gg=S("g",{},g); S("path",{d:`M${x-3},${y+8}V${y-8}`,stroke:color,"stroke-width":2,"stroke-linecap":"round"},gg); S("path",{d:`M${x-3},${y-8}h10l-3,4l3,4h-10Z`,fill:color},gg); return gg; }
+    case "star": { const pts=[]; for(let i=0;i<10;i++){ const r=i%2?4:9, a=Math.PI/5*i-Math.PI/2; pts.push((x+r*Math.cos(a)).toFixed(1)+","+(y+r*Math.sin(a)).toFixed(1)); } return S("polygon",{points:pts.join(" "),fill:color,stroke:"var(--surface)","stroke-width":1.5},g); }
+    default: return S("circle",{cx:x,cy:y,r:s,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+  }
+}
+
+function itemColor(it){
+  if(it.kind==="incident"){ const sev=(M.incidents.find(i=>i.id===it.iid)||{}).severity; return sev==="low"?"var(--neutral)":sev==="medium"?"var(--warning)":sev==="high"?"var(--serious)":"var(--critical)"; }
+  if(it.kind==="outcome") return it.status==="solved"?"var(--good)":it.status==="partial"?"var(--warning)":it.status==="in_progress"?"var(--c-blue)":"var(--critical)";
+  if(it.kind==="flag") return it.status==="rejected"?"var(--critical)":it.status==="accepted"?"var(--good)":"var(--c-magenta)";
+  if(it.kind==="hypothesis"){ const h=M.hyps.find(x=>x.id===it.hid); const s=it.status||(h&&h.status); return s==="confirmed"?"var(--good)":s==="refuted"?"var(--critical)":"var(--c-yellow)"; }
+  return kindOf(it.kind)[0];
+}
+function itemLane(it){ const a = it.agent || it.by; if(a && a in laneIdx) return a; if(it.kind==="outcome"||it.kind==="flag") return lanes.find(l=>M.agents[laneIdx[l]].role==="P") || lanes[0]; return lanes[0]; }
+function itemStep(it){ return it.step || null; }
+
+function drawTimeline(){
+  const sc = $("#tl-scroll"); const baseW = Math.max(600, sc.clientWidth - 1);
+  W = Math.round(baseW * zoom);
+  const svg = $("#tl"); svg.innerHTML=""; svg.setAttribute("width",W); svg.setAttribute("height",TOTAL_H);
+  // labels column
+  const lab = $("#tl-labels"); lab.innerHTML="";
+  const pad = H("div",{},lab); pad.style.height = (lanesTop)+"px"; pad.className="lab group"; pad.style.alignItems="flex-end"; pad.style.paddingBottom="4px"; pad.textContent = PH_H? "фазы / агенты":"агенты";
+  M.agents.forEach((a,i)=>{
+    const d=H("div",{class:"lab"},lab); d.style.height=LANE_H+"px"; if(i%2) d.style.background="var(--lane-alt)";
+    const rc=ROLE[a.role]||ROLE.other; const r=H("span",{class:"role"},d,ROLE_SHORT[a.role]||a.role); r.style.background=rc[0];
+    const box=H("div",{},d); box.style.minWidth="0";
+    H("div",{class:"nm"},box,a.id.replace(/^[ER]:/,"")); H("div",{class:"meta"},box,[tok(a.tokens)+" tok", a.cost? money(a.cost):null, a.model].filter(Boolean).join(" · "));
+    d.title = `${a.id}\n${a.label||""}\nмодель: ${a.model||"?"}\nтокены: ${tok(a.tokens)}  стоимость: ${money(a.cost)}\nсобытий: ${a.events}`;
+    d.onclick = () => { if(a.steps && a.steps.length) setFocus(focusStep===a.steps[0]?null:a.steps[0]); openAgent(a); };
+  });
+  const lt=H("div",{class:"lab group"},lab); lt.style.height=(tokTop-lanesBottom)+"px"; lt.style.alignItems="flex-end"; lt.textContent="";
+  const l2=H("div",{class:"lab"},lab); l2.style.height=TOK_H+"px"; l2.style.alignItems="flex-start"; l2.innerHTML=`<div><div class="nm">Токены (накопл.)</div><div class="meta">стек по ролям</div></div>`;
+  const l3=H("div",{class:"lab"},lab); l3.style.height=(progTop-tokTop-TOK_H)+"px";
+  const l4=H("div",{class:"lab"},lab); l4.style.height=PROG_H+"px"; l4.style.alignItems="flex-start"; l4.innerHTML=`<div><div class="nm">Прогресс DAG</div><div class="meta">узлы по статусам</div></div>`;
+
+  const gGrid=S("g",{},svg), gPh=S("g",{},svg), gLanes=S("g",{},svg), gLinks=S("g",{},svg), gMk=S("g",{},svg), gCh=S("g",{},svg), gCur=S("g",{},svg);
+  // lane backgrounds
+  lanes.forEach((a,i)=>{ if(i%2) S("rect",{x:0,y:lanesTop+i*LANE_H,width:W,height:LANE_H,fill:"var(--lane-alt)"},gGrid); });
+  // axis + gridlines
+  const step = niceStep(W); const ax=S("g",{class:"ax"},gGrid);
+  for(let s=0; s<=SPAN+1e-6; s+=step){ const x=X(t0+s);
+    S("line",{x1:x,x2:x,y1:AX_H-6,y2:TOTAL_H-24,stroke:"var(--grid)","stroke-width":1},gGrid);
+    const lbl = s>=3600? `${Math.floor(s/3600)}ч${String(Math.floor(s%3600/60)).padStart(2,"0")}` : s>=60? `${Math.round(s/60)}м` : `${s}с`;
+    S("text",{x:x,y:16,"text-anchor":"middle"},ax).textContent = "+"+lbl;
+    S("text",{x:x,y:TOTAL_H-8,"text-anchor":"middle"},ax).textContent = new Date((t0+s)*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+  }
+  S("line",{x1:0,x2:W,y1:AX_H-2,y2:AX_H-2,stroke:"var(--axis)"},gGrid);
+  const axHit=S("rect",{x:0,y:0,width:W,height:AX_H,fill:"transparent",style:"cursor:col-resize"},gGrid);
+  let dragging=false; axHit.addEventListener("mousedown",e=>{dragging=true; setCursorFromEvent(e);});
+  window.addEventListener("mousemove",e=>{ if(dragging) setCursorFromEvent(e); }); window.addEventListener("mouseup",()=>dragging=false);
+  // phases
+  M.phases.forEach((p,i)=>{ const x1=X(p.start), x2=Math.max(X(p.end), x1+3); const c=["var(--c-blue)","var(--c-orange)","var(--c-aqua)","var(--c-violet)"][i%4];
+    const r=S("rect",{x:x1,y:AX_H+2,width:x2-x1,height:PH_H-4,rx:4,fill:c,"fill-opacity":.18,stroke:c,"stroke-opacity":.6},gPh);
+    S("text",{x:x1+5,y:AX_H+PH_H/2+4,"font-size":11,fill:"var(--ink-2)"},gPh).textContent=p.name+(p.open?" …":"");
+    r.addEventListener("mousemove",e=>showTip(e,`<b>фаза: ${esc(p.name)}</b><div class="tm">${rel(p.start)} → ${rel(p.end)} (${dur(p.end-p.start)})</div>${esc(p.note||"")}`)); r.addEventListener("mouseleave",hideTip);
+    S("rect",{x:x1,y:lanesTop,width:x2-x1,height:lanesBottom-lanesTop,fill:c,"fill-opacity":.035},gPh);
+  });
+  // lane spans
+  M.agents.forEach(a=>{
+    const y=laneY(a.id);
+    // node runs for step-bound agents (status-colored), else role-colored spans
+    a.spans.forEach(([s,e,st])=>{
+      const c = (st==="active"||!STATUS[st]||!(a.steps&&a.steps.length))? (ROLE[a.role]||ROLE.other)[0] : STATUS[st][0];
+      const x1=X(s), x2=Math.max(X(e), x1+3);
+      const step = (a.steps||[])[0]||null;
+      const g=S("g",{class:"mk","data-step":step||""},gLanes);
+      S("rect",{x:x1,y:y-8,width:x2-x1,height:16,rx:4,fill:c,"fill-opacity":.2,stroke:c,"stroke-opacity":.85,"stroke-width":1.2},g);
+      if(st && STATUS[st] && st!=="running" && st!=="active" && x2-x1>14) S("text",{x:x2-4,y:y+4,"text-anchor":"end","font-size":11,"font-weight":700,fill:c},g).textContent=STATUS[st][2];
+      g.addEventListener("mousemove",ev=>showTip(ev,`<b>${esc(a.id)}</b> · ${esc((STATUS[st]||[0,st])[1])}<div class="tm">${rel(s)} → ${rel(e)} · ${dur(e-s)}</div>${esc(clip(a.label||"",200))}`));
+      g.addEventListener("mouseleave",hideTip);
+      g.addEventListener("click",ev=>{ setCursor(tAtX(ev.offsetX)); if(step) setFocus(step); openAgent(a); });
+    });
+  });
+  // token activity ticks inside lanes (bucketed usage → bar height)
+  (function(){ const maxU=Math.max(1,...M.usage.map(u=>u.tokens||0)); const gA=S("g",{},gLanes);
+    M.usage.forEach(u=>{ if(!(u.agent in laneIdx)||!u.tokens) return; const a=M.agents[laneIdx[u.agent]]; const y=laneY(u.agent); const h=Math.max(1.5,(LANE_H/2-3)*Math.sqrt(u.tokens/maxU));
+      S("rect",{x:X(u.t)-1,y:y+LANE_H/2-2-h,width:2,height:h,fill:(ROLE[a.role]||ROLE.other)[0],opacity:.55,"data-step":(a.steps||[])[0]||""},gA); }); })();
+  // orchestration links: dag ops (by -> assignee) and messages (agent -> to)
+  if(showLinks){
+    const link=(xa,ya,xb,yb,color,dash,meta)=>{ const mid=(ya+yb)/2; const p=S("path",{d:`M${xa},${ya} C${xa+18},${mid} ${xb-18},${mid} ${xb},${yb}`,fill:"none",stroke:color,"stroke-width":1.4,"stroke-opacity":.7,"stroke-dasharray":dash||null,class:"mk","data-step":meta.step||""},gLinks);
+      S("circle",{cx:xb,cy:yb,r:2.5,fill:color,"data-step":meta.step||""},gLinks);
+      p.addEventListener("mousemove",e=>showTip(e,meta.html)); p.addEventListener("mouseleave",hideTip); p.addEventListener("click",()=>{ setCursor(meta.t); meta.click&&meta.click(); }); };
+    OPS.forEach(o=>{ const n=M.nodes.find(n=>n.id===o.node); const asg=(n&&n.assignee)||o.assignee; if(!o.by||!(o.by in laneIdx)||!asg||!(asg in laneIdx)||o.by===asg) return;
+      if(!(o.op==="add"||(o.op==="status"&&(o.status==="running"||o.status==="cancelled"))||o.op==="update")) return;
+      const c = o.op==="add"? "var(--c-violet)" : o.status==="cancelled"? "var(--cancel)" : o.op==="update"? "var(--c-violet)" : "var(--c-blue)";
+      link(X(o.t),laneY(o.by),X(o.t)+(o.op==="add"?0:0),laneY(asg),c,o.op==="add"?"4 3":null,{t:o.t,step:o.node,html:`<b>${esc(o.by)} → ${esc(asg)}</b>: ${esc(opLabel(o))}<div class="tm">T+${rel(o.t)}</div>`,click:()=>setFocus(o.node)}); });
+    M.items.forEach(it=>{ if(!it.to||!(it.to in laneIdx)||!it.agent||!(it.agent in laneIdx)||it.to===it.agent) return; if(hiddenKinds.has(it.kind)) return;
+      link(X(it.t),laneY(it.agent),X(it.t),laneY(it.to),kindOf(it.kind)[0],"2 3",{t:it.t,step:it.step,html:`<b>${esc(it.agent)} → ${esc(it.to)}</b> · ${esc(kindOf(it.kind)[1])}<div class="tm">T+${rel(it.t)}</div>${esc(clip(it.title,300))}`,click:()=>openItem(it)}); });
+  }
+  // dag op markers on 'by' lanes
+  OPS.forEach(o=>{ if(!o.by||!(o.by in laneIdx)) return; const y=laneY(o.by), x=X(o.t);
+    const c = o.op==="status"? (STATUS[o.status]||STATUS.pending)[0] : "var(--c-violet)";
+    const g=S("g",{class:"mk","data-step":o.node},gMk);
+    S("rect",{x:x-4,y:y-4,width:8,height:8,transform:`rotate(45 ${x} ${y})`,fill:"var(--surface)",stroke:c,"stroke-width":2},g);
+    g.addEventListener("mousemove",e=>showTip(e,`<b>DAG: ${esc(opLabel(o))}</b><div class="tm">T+${rel(o.t)} · ${esc(o.by)}</div>`)); g.addEventListener("mouseleave",hideTip);
+    g.addEventListener("click",()=>{ setCursor(o.t); setFocus(o.node); });
+  });
+  // items
+  M.items.forEach(it=>{ if(hiddenKinds.has(it.kind)) return; const lane=itemLane(it); if(lane==null) return;
+    const x=X(it.t), y=laneY(lane); const k=kindOf(it.kind);
+    const g=S("g",{class:"mk","data-step":itemStep(it)||""},gMk); marker(g,k[2],x,y,itemColor(it), it.kind==="outcome"?7:5.5);
+    S("rect",{x:x-7,y:y-10,width:14,height:20,fill:"transparent"},g);
+    g.addEventListener("mousemove",e=>showTip(e,`<b>${esc(k[1])}</b> · ${esc(it.agent||it.by||"")}${it.to?" → "+esc(it.to):""}${it.step?` · шаг <b>${esc(it.step)}</b>`:""}<div class="tm">T+${rel(it.t)}${it.tokens?` · +${tok(it.tokens)} tok`:""}</div>${esc(clip(it.title,300))}`));
+    g.addEventListener("mouseleave",hideTip); g.addEventListener("click",()=>openItem(it));
+  });
+  // lane click -> cursor
+  S("rect",{x:0,y:lanesTop,width:W,height:lanesBottom-lanesTop,fill:"transparent"},gGrid).addEventListener("click",e=>setCursor(tAtX(e.offsetX)));
+  drawTokens(gCh); drawProgress(gCh);
+  // cursor
+  const cx=X(cursor);
+  S("line",{id:"cur",x1:cx,x2:cx,y1:AX_H-4,y2:TOTAL_H-22,stroke:"var(--ink)","stroke-width":1.5,"stroke-dasharray":"3 3",opacity:.65},gCur);
+  S("path",{id:"curh",d:`M${cx-6},${AX_H-12}h12l-6,8z`,fill:"var(--ink)"},gCur);
+  applyFocus();
+}
+function setCursorFromEvent(e){ const r=$("#tl").getBoundingClientRect(); setCursor(tAtX(e.clientX-r.left)); }
+
+function drawTokens(g){
+  const y0=tokTop+TOK_H, top=tokTop; const max=Math.max(1, ...tokSeries.map(p=>Object.values(p.v).reduce((a,b)=>a+b,0)));
+  S("text",{x:PADL,y:top-6,"font-size":11,fill:"var(--ink-2)"},g).textContent=`всего ${tok(T.tokens)} · ${money(T.cost)}`;
+  [0.5,1].forEach(f=>{ const y=y0-(TOK_H-6)*f; S("line",{x1:PADL,x2:W-PADR,y1:y,y2:y,stroke:"var(--grid)","stroke-dasharray":"2 3"},g); S("text",{x:W-PADR-2,y:y-3,"text-anchor":"end","font-size":10,fill:"var(--muted)"},g).textContent=tok(max*f); });
+  S("line",{x1:PADL,x2:W-PADR,y1:y0,y2:y0,stroke:"var(--axis)"},g);
+  if(!M.usage.length){ S("text",{x:PADL+8,y:top+TOK_H/2,"font-size":12,fill:"var(--muted)"},g).textContent="нет данных о токенах"; return; }
+  const order = ["P","E","R","C","operator","other","runtime"].filter(r=>rolesPresent.includes(r));
+  const base = tokSeries.map(()=>0);
+  order.forEach(r=>{ const c=(ROLE[r]||ROLE.other)[0]; const up=[], dn=[];
+    tokSeries.forEach((p,i)=>{ const v=p.v[r]||0; const yb=y0-(TOK_H-6)*base[i]/max; const yt=y0-(TOK_H-6)*(base[i]+v)/max; dn.push([X(p.t),yb]); up.push([X(p.t),yt]); base[i]+=v; });
+    if(up.every((p,i)=>Math.abs(p[1]-dn[i][1])<0.01)) return;
+    const d="M"+up.map(p=>p.join(",")).join("L")+"L"+dn.reverse().map(p=>p.join(",")).join("L")+"Z";
+    const gid="tokg-"+r; const lg=S("linearGradient",{id:gid,x1:0,x2:0,y1:0,y2:1},S("defs",{},g));
+    S("stop",{offset:0,"stop-color":c,"stop-opacity":.55},lg); S("stop",{offset:1,"stop-color":c,"stop-opacity":.06},lg);
+    S("path",{d,fill:`url(#${gid})`,stroke:"none"},g);
+    S("path",{d:"M"+up.map(p=>p.join(",")).join("L"),fill:"none",stroke:c,"stroke-width":2,"stroke-linejoin":"round"},g);
+  });
+  const hit=S("rect",{x:PADL,y:top,width:W-PADL-PADR,height:TOK_H,fill:"transparent"},g);
+  const vline=S("line",{x1:0,x2:0,y1:top,y2:y0,stroke:"var(--ink-2)","stroke-width":1,opacity:0},g);
+  hit.addEventListener("mousemove",e=>{ const t=tAtX(e.offsetX); const i=Math.max(0,Math.min(NS_,Math.round((t-t0)/SPAN*NS_))); const p=tokSeries[i];
+    vline.setAttribute("x1",X(p.t)); vline.setAttribute("x2",X(p.t)); vline.setAttribute("opacity",.6);
+    const tot=Object.values(p.v).reduce((a,b)=>a+b,0);
+    showTip(e,`<b>T+${rel(p.t)}</b> · всего ${tok(tot)} · ${money(p.c)}<br>`+order.map(r=>`<span class="sw" style="background:${ROLE[r][0]}"></span> ${ROLE[r][1]}: ${tok(p.v[r]||0)}`).join("<br>")); });
+  hit.addEventListener("mouseleave",()=>{ hideTip(); vline.setAttribute("opacity",0); });
+  hit.addEventListener("click",e=>setCursor(tAtX(e.offsetX)));
+}
+function drawProgress(g){
+  const y0=progTop+PROG_H, top=progTop; const max=Math.max(1,...progSeries.map(p=>Object.values(p.c).reduce((a,b)=>a+b,0)));
+  S("line",{x1:PADL,x2:W-PADR,y1:y0,y2:y0,stroke:"var(--axis)"},g);
+  S("text",{x:W-PADR-2,y:top+8,"text-anchor":"end","font-size":10,fill:"var(--muted)"},g).textContent=max+" узл.";
+  if(!OPS.length){ S("text",{x:PADL+8,y:top+PROG_H/2,"font-size":12,fill:"var(--muted)"},g).textContent="DAG не записан"; return; }
+  const base=progSeries.map(()=>0);
+  PROG_ORDER.forEach(k=>{ const c=STATUS[k][0]; const up=[],dn=[];
+    progSeries.forEach((p,i)=>{ const v=p.c[k]||0; const x=X(p.t); dn.push([x,y0-(PROG_H-8)*base[i]/max]); up.push([x,y0-(PROG_H-8)*(base[i]+v)/max]); base[i]+=v; });
+    if(up.every((p,i)=>Math.abs(p[1]-dn[i][1])<0.01)) return;
+    S("path",{d:"M"+up.map(p=>p.join(",")).join("L")+"L"+dn.reverse().map(p=>p.join(",")).join("L")+"Z",fill:c,"fill-opacity":k==="pending"?.45:.6,stroke:"var(--surface)","stroke-width":.8},g);
+  });
+  const hit=S("rect",{x:PADL,y:top,width:W-PADL-PADR,height:PROG_H,fill:"transparent"},g);
+  hit.addEventListener("mousemove",e=>{ const t=tAtX(e.offsetX); const i=Math.max(0,Math.min(NS_,Math.round((t-t0)/SPAN*NS_))); const p=progSeries[i];
+    showTip(e,`<b>T+${rel(p.t)}</b><br>`+PROG_ORDER.filter(k=>p.c[k]).map(k=>`<span class="sw" style="background:${STATUS[k][0]}"></span> ${STATUS[k][1]}: ${p.c[k]}`).join("<br>")); });
+  hit.addEventListener("mouseleave",hideTip); hit.addEventListener("click",e=>setCursor(tAtX(e.offsetX)));
+}
+
+function opLabel(o){
+  switch(o.op){
+    case "add": return `+ ${o.node}${o.deps&&o.deps.length?" ← "+o.deps.join(","):""}${o.objective?": "+clip(o.objective,90):""}`;
+    case "status": return `${o.node}: ${(STATUS[o.prev]||[0,o.prev||"?"])[1]} → ${(STATUS[o.status]||[0,o.status])[1]}${o.reason?" ("+clip(o.reason,80)+")":""}`;
+    case "update": return `~ ${o.node}${o.fields?" ["+o.fields.join(",")+"]":""}${o.deps?" deps→"+(o.deps.join(",")||"∅"):""}${o.note?": "+clip(o.note,80):""}`;
+    case "remove": return `⌫ ${o.node}${o.reason?" ("+clip(o.reason,80)+")":""}`;
+    case "dep_add": return `+ ребро ${(o.deps||[]).join(",")} → ${o.node}`;
+    case "dep_rm": return `− ребро ${(o.deps||[]).join(",")} → ${o.node}`;
+  } return o.op+" "+o.node;
+}
+
+/* ---------- legend & chips ---------- */
+(function(){
+  const lg=$("#legend");
+  const add=(html)=>{ const s=H("span",{},lg); s.innerHTML=html; };
+  rolesPresent.forEach(r=>add(`<span class="sw" style="background:${(ROLE[r]||ROLE.other)[0]}"></span>${(ROLE[r]||ROLE.other)[1]}`));
+  add(`<span style="color:var(--muted)">│ полосы активности:</span>`);
+  ["running","done","failed","cancelled"].forEach(s=>add(`<span class="sw" style="background:${STATUS[s][0]};opacity:.7"></span>${STATUS[s][1]}`));
+  add(`<span style="color:var(--muted)">│</span><svg width="12" height="12"><rect x="2" y="2" width="8" height="8" transform="rotate(45 6 6)" fill="none" stroke="var(--c-violet)" stroke-width="2"/></svg>правка DAG`);
+  add(`<svg width="26" height="10"><path d="M1,5H25" stroke="var(--c-violet)" stroke-dasharray="4 3" stroke-width="1.5"/></svg>поручение P→E`);
+  add(`<svg width="26" height="10"><path d="M1,5H25" stroke="var(--c-orange)" stroke-dasharray="2 3" stroke-width="1.5"/></svg>сообщение`);
+  const kinds=[...new Set(M.items.map(i=>i.kind))];
+  const chips=$("#kindchips");
+  kinds.forEach(k=>{ const kk=kindOf(k); const c=H("span",{class:"chip"+(hiddenKinds.has(k)?" off":"")},chips); c.style.cursor="pointer";
+    const sv=S("svg",{width:14,height:14},null); marker(sv,kk[2],7,7,kk[0],4.5); c.appendChild(sv); H("span",{},c,kk[1]+" "+M.items.filter(i=>i.kind===k).length);
+    c.onclick=()=>{ hiddenKinds.has(k)?hiddenKinds.delete(k):hiddenKinds.add(k); c.classList.toggle("off"); drawTimeline(); }; });
+  const dl=$("#dag-legend"); ["pending","running","done","failed","cancelled","blocked"].forEach(s=>{ const e=H("span",{},dl); e.innerHTML=`<span class="sw" style="background:${STATUS[s][0]}"></span>${STATUS[s][2]} ${STATUS[s][1]}`; });
+  const e=H("span",{},dl); e.innerHTML=`<span class="muted">│ пульсирующая рамка — узел изменён последней ревизией · пунктир — ещё не добавлен/удалён</span>`;
+})();
+
+/* ---------- DAG view ---------- */
+const NW=230, NH=74, CG=64, RG=16, MAXCOL=7;
+const allNodes = M.nodes.slice().sort((a,b)=>a.added-b.added);
+const layout = (()=>{ const by={}; allNodes.forEach(n=>by[n.id]=n); const depth={};
+  // union of all deps ever seen for stable layout
+  const deps={}; allNodes.forEach(n=>deps[n.id]=new Set(n.deps)); OPS.forEach(o=>{ if(o.deps&&deps[o.node]) o.deps.forEach(d=>deps[o.node].add(d)); });
+  const d=(id,seen)=>{ if(depth[id]!=null) return depth[id]; if(seen.has(id)) return 0; seen.add(id); const ds=[...(deps[id]||[])].filter(x=>by[x]); depth[id]= ds.length? 1+Math.max(...ds.map(x=>d(x,seen))) : 0; return depth[id]; };
+  allNodes.forEach(n=>d(n.id,new Set()));
+  const layers={}; allNodes.forEach(n=>(layers[depth[n.id]]=layers[depth[n.id]]||[]).push(n));
+  const pos={}; let col=0, maxRows=0;
+  Object.keys(layers).map(Number).sort((a,b)=>a-b).forEach(L=>{ const arr=layers[L]; for(let i=0;i<arr.length;i+=MAXCOL){ const chunk=arr.slice(i,i+MAXCOL); chunk.forEach((n,j)=>pos[n.id]={x:20+col*(NW+CG), y:20+j*(NH+RG)}); maxRows=Math.max(maxRows,chunk.length); col++; } });
+  return {pos, w:40+col*(NW+CG)-CG, h:40+maxRows*(NH+RG)-RG};
+})();
+function drawDag(){
+  const svg=$("#dag"); svg.innerHTML="";
+  if(!allNodes.length){ $("#dag-box").innerHTML='<div class="empty">DAG не записан</div>'; return; }
+  svg.setAttribute("width",Math.max(layout.w,300)); svg.setAttribute("height",Math.max(layout.h,200));
+  const defs=S("defs",{},svg); const mk=S("marker",{id:"arr",viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:7,markerHeight:7,orient:"auto-start-reverse"},defs); S("path",{d:"M0,0L10,5L0,10z",fill:"var(--axis)"},mk);
+  const st=dagAt(cursor); const lastOp = st.last>=0? OPS[st.last] : null;
+  const gE=S("g",{},svg), gN=S("g",{},svg);
+  allNodes.forEach(n=>{ const s=st.nodes[n.id]; if(!s) return; const p=layout.pos[n.id];
+    s.deps.forEach(dp=>{ const q=layout.pos[dp]; if(!q||!st.nodes[dp]) return; const x1=q.x+NW, y1=q.y+NH/2, x2=p.x, y2=p.y+NH/2;
+      const path = x2>x1 ? `M${x1},${y1} C${x1+CG/2},${y1} ${x2-CG/2},${y2} ${x2-2},${y2}` : `M${q.x+NW/2},${q.y+NH} C${q.x+NW/2},${q.y+NH+30} ${p.x+NW/2},${p.y-30} ${p.x+NW/2},${p.y-2}`;
+      S("path",{d:path,fill:"none",stroke:"var(--axis)","stroke-width":1.6,"marker-end":"url(#arr)",opacity:(s.removed||s.status==="cancelled")?.4:1},gE); });
+  });
+  allNodes.forEach(n=>{ const s=st.nodes[n.id]; const p=layout.pos[n.id];
+    const g=S("g",{class:"node",transform:`translate(${p.x},${p.y})`},gN);
+    if(!s){ S("rect",{width:NW,height:NH,rx:9,fill:"none",stroke:"var(--grid)","stroke-dasharray":"4 4"},g); S("text",{x:12,y:22,class:"nid",opacity:.35},g).textContent=n.id; S("text",{x:12,y:40,opacity:.45},g).textContent=`появится в T+${rel(n.added)}`; g.onclick=()=>{ setCursor(n.added); }; return; }
+    const stt = s.removed? "removed" : s.status; const c=(STATUS[stt]||STATUS.pending)[0];
+    const faded = s.removed || stt==="cancelled";
+    S("rect",{width:NW,height:NH,rx:9,fill:"var(--surface)",stroke:focusStep===n.id?"var(--ink)":"var(--ring)","stroke-width":focusStep===n.id?2:1,opacity:faded?.55:1,"stroke-dasharray":s.removed?"4 4":null},g);
+    S("rect",{x:0,y:0,width:6,height:NH,rx:3,fill:c,opacity:faded?.6:1},g);
+    S("rect",{x:6,y:0,width:NW-6,height:NH,rx:9,fill:c,"fill-opacity":stt==="pending"?0.04:0.10},g);
+    if(lastOp && lastOp.node===n.id) S("rect",{x:-4,y:-4,width:NW+8,height:NH+8,rx:12,fill:"none",stroke:c,"stroke-width":2.5,class:"changed"},g);
+    S("text",{x:14,y:18,class:"nid",opacity:faded?.6:1},g).textContent=clip(n.id,30);
+    const obj=s.objective||n.objective||""; S("text",{x:14,y:34},g).textContent=clip(obj,36); S("text",{x:14,y:47},g).textContent=clip(obj.slice(35),36);
+    S("text",{x:14,y:65,"font-size":11,"font-weight":700,fill:c},g).textContent=(STATUS[stt]||STATUS.pending)[2]+" "+(STATUS[stt]||STATUS.pending)[1];
+    S("text",{x:NW-10,y:65,"text-anchor":"end","font-size":10,fill:"var(--muted)"},g).textContent=[s.assignee?clip(s.assignee,18):null, s.attempts>1?`×${s.attempts}`:null].filter(Boolean).join(" · ");
+    const evs=M.items.filter(i=>i.step===n.id && i.t<=cursor);
+    g.addEventListener("mousemove",e=>showTip(e,`<b>${esc(n.id)}</b> · ${esc((STATUS[stt]||[0,stt])[1])}${s.assignee?` · ${esc(s.assignee)}`:""}<div class="tm">добавлен T+${rel(n.added)} (${esc(n.added_by||"?")}) · deps: ${esc(s.deps.join(", ")||"—")}</div>${esc(clip(obj,400))}${s.reason?`<div class="tm">${esc(clip(s.reason,300))}</div>`:""}<div class="tm">событий к этому моменту: ${evs.length}</div>`));
+    g.addEventListener("mouseleave",hideTip);
+    g.addEventListener("click",()=>{ setFocus(focusStep===n.id?null:n.id); openNode(n); });
+  });
+}
+function drawRevs(){
+  const box=$("#revs"); box.innerHTML="";
+  if(!OPS.length){ box.innerHTML='<div class="empty">нет ревизий</div>'; return; }
+  const st=dagAt(cursor);
+  OPS.forEach((o,i)=>{ const r=H("div",{class:"rev"+(i===st.last?" cur":"")+(o.t>cursor+1e-6?" future":"")},box);
+    H("div",{class:"t"},r,"T+"+rel(o.t));
+    const c=o.op==="status"?(STATUS[o.status]||STATUS.pending)[0]:"var(--c-violet)"; const ic=H("div",{},r, o.op==="add"?"+":o.op==="status"?(STATUS[o.status]||[0,0,"?"])[2]:o.op==="remove"?"⌫":"~"); ic.style.color=c; ic.style.fontWeight="700";
+    const d=H("div",{},r); H("span",{class:"who"},d,(o.by||"?")+" "); H("span",{},d,opLabel(o));
+    r.onclick=()=>{ setCursor(o.t); setFocus(o.node); };
+    if(i===st.last) requestAnimationFrame(()=>{ const bt=box.scrollTop, bh=box.clientHeight; if(r.offsetTop<bt||r.offsetTop>bt+bh-30) box.scrollTop=r.offsetTop-bh/2; });
+  });
+}
+
+/* ---------- cursor & focus ---------- */
+const slider=$("#slider");
+function setCursor(t){ cursor=Math.max(t0,Math.min(t1,t)); slider.value=Math.round((cursor-t0)/SPAN*1000);
+  const cx=X(cursor); const l=$("#cur"); if(l){ l.setAttribute("x1",cx); l.setAttribute("x2",cx); $("#curh").setAttribute("d",`M${cx-6},${AX_H-12}h12l-6,8z`); }
+  $("#tb-now").textContent="T+"+rel(cursor); $("#sl-now").textContent="T+"+rel(cursor);
+  const st=dagAt(cursor); $("#sl-rev").textContent = OPS.length? `ревизия ${st.last+1} / ${OPS.length}` : "";
+  drawDag(); drawRevs(); }
+slider.oninput=()=>{ stopPlay(); setCursor(t0+SPAN*slider.value/1000); };
+$("#prev").onclick=()=>{ stopPlay(); const st=dagAt(cursor); const i=Math.max(0,(OPS[st.last]&&Math.abs(OPS[st.last].t-cursor)<1e-3)?st.last-1:st.last); if(OPS[i]) setCursor(OPS[i].t); };
+$("#next").onclick=()=>{ stopPlay(); const st=dagAt(cursor); const o=OPS.find((o,i)=>i>st.last); if(o) setCursor(o.t); };
+let playT=null; function stopPlay(){ if(playT){ clearInterval(playT); playT=null; $("#play").textContent="▶"; } }
+$("#play").onclick=()=>{ if(playT){ stopPlay(); return; } if(!OPS.length) return; let i = cursor>=t1-1e-3? 0 : dagAt(cursor).last+1; $("#play").textContent="❚❚";
+  setCursor(OPS[Math.min(i,OPS.length-1)].t); playT=setInterval(()=>{ i++; if(i>=OPS.length){ setCursor(t1); stopPlay(); return; } setCursor(OPS[i].t); },900); };
+function setFocus(step){ focusStep=step; $("#clearfocus").style.display=step?"":"none"; applyFocus(); drawDag(); }
+$("#clearfocus").onclick=()=>setFocus(null);
+function applyFocus(){ document.querySelectorAll("#tl [data-step]").forEach(e=>{ const s=e.getAttribute("data-step"); e.classList.toggle("dim", !!focusStep && s!==focusStep); }); }
+
+/* ---------- incidents / hyps / agents ---------- */
+(function(){
+  const box=$("#incidents"); const inc=M.incidents.slice().sort((a,b)=>a.created-b.created);
+  $("#inc-count").textContent = inc.length? `${M.totals.incidents_open} открыто / ${inc.length}` : "";
+  if(!inc.length) box.innerHTML='<div class="empty">инцидентов не зафиксировано</div>';
+  const SC={low:"var(--neutral)",medium:"var(--warning)",high:"var(--serious)",critical:"var(--critical)"};
+  inc.forEach(i=>{ const d=H("div",{class:"inc"},box); d.style.setProperty("--sevc",SC[i.severity]||SC.medium); if(i.status==="resolved"||i.status==="wontfix") d.style.opacity=.6; else if(i.status==="mitigated") d.style.opacity=.85;
+    const h=H("div",{},d); h.style.display="flex"; h.style.gap="6px"; h.style.alignItems="center"; h.style.flexWrap="wrap";
+    H("span",{class:"sev "+i.severity},h,"⚠ "+i.severity); H("span",{class:"st"},h,i.category); H("span",{class:"st",title:i.status==="mitigated"?"обойдено в сессии, причина не устранена":""},h,({resolved:"✓ ",mitigated:"◐ ",wontfix:"⊘ ",investigating:"… "}[i.status]||"")+i.status);
+    H("span",{class:"muted"},h,"T+"+rel(i.created)+(i.agent?" · "+i.agent:"")+(i.step?" · шаг "+i.step:""));
+    H("div",{class:"tt"},d,i.title);
+    const det=[i.detail, i.impact&&("Влияние: "+i.impact), i.workaround&&("Обход: "+i.workaround)].filter(Boolean).join("\n"); if(det) H("div",{class:"d"},d,det);
+    d.onclick=()=>{ setCursor(i.created); if(i.step) setFocus(i.step); openIncident(i); };
+  });
+  const hb=$("#hyps"); const hy=M.hyps.slice().sort((a,b)=>a.created-b.created); $("#hyp-count").textContent=hy.length? String(hy.length):"";
+  if(!hy.length) hb.innerHTML='<div class="empty">гипотез не записано</div>';
+  const HC={open:"var(--neutral)",testing:"var(--c-blue)",confirmed:"var(--good)",refuted:"var(--critical)",abandoned:"var(--cancel)"};
+  hy.forEach(h=>{ const d=H("div",{class:"hyp "+h.status},hb); const top=H("div",{},d); top.style.display="flex"; top.style.gap="6px"; top.style.alignItems="center";
+    const s=H("span",{class:"st"},top,h.status); s.style.background=HC[h.status]||HC.open; s.style.color=(h.status==="open"||h.status==="abandoned")?"var(--ink)":"#fff"; s.style.border="none";
+    H("b",{},top,h.id); H("span",{class:"muted"},top,"T+"+rel(h.created)+(h.agent?" · "+h.agent:"")+(h.step?" · "+h.step:""));
+    H("div",{class:"claim"},d,h.claim);
+    const ev=h.history.filter(x=>x.evidence).slice(-1)[0]; if(ev) H("div",{class:"muted"},d,"↳ "+clip(ev.evidence,200)).style.fontSize="12px";
+    d.onclick=()=>{ setCursor(h.updated||h.created); if(h.step) setFocus(h.step); openHyp(h); }; });
+  const at=$("#agents-tbl"); const tb=H("table",{},at); const hr=H("tr",{},H("thead",{},tb)); ["агент","роль","модель","активен","токены","$"].forEach(x=>H("th",{},hr,x));
+  const bd=H("tbody",{},tb); M.agents.forEach(a=>{ const r=H("tr",{class:"r"},bd); H("td",{},r,a.id); const rc=H("td",{},r); const rs=H("span",{class:"role"},rc,ROLE_SHORT[a.role]||a.role); rs.style.cssText=`background:${(ROLE[a.role]||ROLE.other)[0]};color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px`;
+    H("td",{},r,a.model||"—"); H("td",{class:"t"},r,dur(a.spans.reduce((s,x)=>s+x[1]-x[0],0))); H("td",{class:"t"},r,tok(a.tokens)); H("td",{class:"t"},r,money(a.cost)); r.onclick=()=>openAgent(a); });
+})();
+
+/* ---------- log ---------- */
+(function(){
+  const fa=$("#fa"), fk=$("#fk");
+  M.agents.forEach(a=>H("option",{value:a.id},fa,a.id));
+  [...new Set(M.items.map(i=>i.kind))].forEach(k=>H("option",{value:k},fk,kindOf(k)[1]));
+  const body=$("#log");
+  function render(){ body.innerHTML=""; const q=$("#q").value.toLowerCase(); let n=0;
+    M.items.forEach(it=>{ if(fa.value && it.agent!==fa.value && it.to!==fa.value && it.by!==fa.value) return; if(fk.value && it.kind!==fk.value) return;
+      if(q && !((it.title||"")+" "+(it.detail||"")+" "+(it.step||"")).toLowerCase().includes(q)) return; n++;
+      if(n>3000) return;
+      const r=H("tr",{class:"r"},body); H("td",{class:"t"},r,rel(it.t)); H("td",{},r,(it.agent||it.by||"")+(it.to?" → "+it.to:""));
+      const kc=H("td",{},r); const sv=S("svg",{width:14,height:14}); marker(sv,kindOf(it.kind)[2],7,7,itemColor(it),4.5); kc.appendChild(sv); kc.appendChild(document.createTextNode(" "+kindOf(it.kind)[1])); kc.style.whiteSpace="nowrap";
+      H("td",{},r,it.step||""); H("td",{},r,clip(it.title,220)); H("td",{class:"t"},r,it.tokens?tok(it.tokens):"");
+      r.onclick=()=>openItem(it); });
+    $("#logcount").textContent=n+" записей"+(n>3000?" (показаны первые 3000)":""); }
+  $("#q").oninput=render; fa.onchange=render; fk.onchange=render; render();
+})();
+
+/* ---------- drawer ---------- */
+function openDrawer(title, kv, pre){ $("#dr-title").textContent=title; const b=$("#dr-body"); b.innerHTML="";
+  const g=H("div",{class:"kv"},b); kv.filter(x=>x[1]!=null&&x[1]!=="").forEach(([k,v])=>{ H("div",{},g,k); const d=H("div",{},g); if(v instanceof Node) d.appendChild(v); else d.textContent=v; });
+  (pre||[]).filter(x=>x&&x[1]).forEach(([h,t])=>{ H("h2",{style:"margin-top:14px"},b,h); H("pre",{},b,t); });
+  $("#drawer").classList.add("open"); }
+$("#dr-close").onclick=()=>$("#drawer").classList.remove("open");
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") $("#drawer").classList.remove("open"); });
+function openItem(it){ setCursor(it.t); if(it.step) setFocus(it.step);
+  openDrawer(kindOf(it.kind)[1]+(it.id?" · "+it.id:""), [["время","T+"+rel(it.t)+"  ("+abs(it.t)+")"],["агент",it.agent||it.by],["кому",it.to],["шаг",it.step],["токены",it.tokens?tok(it.tokens):null],["стоимость",it.cost?money(it.cost):null],["статус",it.status],["ссылки",(it.refs||[]).join(", ")],["теги",(it.tags||[]).join(", ")],["заголовок",it.title]],
+    [["Подробности",it.detail||it.summary||it.evidence||it.note]]); }
+function openNode(n){ const evs=M.items.filter(i=>i.step===n.id);
+  openDrawer("Узел DAG · "+n.id, [["статус",(STATUS[n.removed?"removed":n.status]||[0,n.status])[1]],["исполнитель",n.assignee],["зависимости",n.deps.join(", ")||"—"],["добавлен","T+"+rel(n.added)+" ("+(n.added_by||"?")+")"],["попыток",String(n.attempts)],["запуски",n.runs.map(r=>`T+${rel(r[0])}–${rel(r[1])} ${r[2]||""}`).join("; ")],["причина",n.reason]],
+    [["Цель",n.objective],["Инструкция",n.detail],["История узла",n.history.map(o=>`T+${rel(o.t)} [${o.by||"?"}] ${opLabel(o)}`).join("\n")],["События шага ("+evs.length+")",evs.map(i=>`T+${rel(i.t)} [${i.agent||""}] ${kindOf(i.kind)[1]}: ${i.title}`).join("\n")]]); }
+function openAgent(a){ openDrawer("Агент · "+a.id, [["роль",(ROLE[a.role]||ROLE.other)[1]],["модель",a.model],["родитель",a.parent],["описание",a.label],["шаги",(a.steps||[]).join(", ")],["токены",`${tok(a.tokens)} (in ${tok(a.input)}, out ${tok(a.output)}, cache ${tok(a.cache_read)})`],["стоимость",money(a.cost)],["событий",String(a.events)],["активность",a.spans.map(s=>`T+${rel(s[0])}–${rel(s[1])} ${s[2]}`).join("; ")]]); }
+function openIncident(i){ openDrawer("Инцидент · "+i.id, [["severity",i.severity],["категория",i.category],["статус",i.status],["создан","T+"+rel(i.created)],["решён",i.resolved?"T+"+rel(i.resolved):null],["обойдён",i.mitigated?"T+"+rel(i.mitigated):null],["агент",i.agent],["шаг",i.step],["заголовок",i.title]],
+  [["Описание",i.detail],["Влияние",i.impact],["Обход",i.workaround],["История",i.history.map(h=>`T+${rel(h.t)} ${h.op||""} ${h.status} ${h.note||""}`).join("\n")]]); }
+function openHyp(h){ openDrawer("Гипотеза · "+h.id, [["статус",h.status],["агент",h.agent],["шаг",h.step],["создана","T+"+rel(h.created)]], [["Утверждение",h.claim],["История",h.history.map(x=>`T+${rel(x.t)} ${x.status}${x.agent?" ("+x.agent+")":""}${x.evidence?": "+x.evidence:""}`).join("\n")]]); }
+
+/* ---------- zoom / theme ---------- */
+function setZoom(z, anchorX){ const sc=$("#tl-scroll"); const old=W; const frac = anchorX!=null? (sc.scrollLeft+anchorX)/old : (sc.scrollLeft+sc.clientWidth/2)/old;
+  zoom=Math.max(1,Math.min(60,z)); drawTimeline(); sc.scrollLeft = frac*W - (anchorX!=null?anchorX:sc.clientWidth/2); }
+$("#zin").onclick=()=>setZoom(zoom*1.6); $("#zout").onclick=()=>setZoom(zoom/1.6); $("#zfit").onclick=()=>setZoom(1);
+$("#tl-scroll").addEventListener("wheel",e=>{ if(!e.ctrlKey) return; e.preventDefault(); const r=$("#tl-scroll").getBoundingClientRect(); setZoom(zoom*(e.deltaY<0?1.25:0.8), e.clientX-r.left); },{passive:false});
+$("#links").onclick=()=>{ showLinks=!showLinks; $("#links").classList.toggle("on",showLinks); drawTimeline(); };
+$("#theme").onclick=()=>{ const r=document.documentElement; const dark = r.dataset.theme? r.dataset.theme==="dark" : matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme = dark? "light":"dark"; try{localStorage.setItem("tl-theme",r.dataset.theme);}catch(e){} };
+try{ const th=localStorage.getItem("tl-theme"); if(th) document.documentElement.dataset.theme=th; }catch(e){}
+let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(drawTimeline,120); });
+
+drawTimeline(); setCursor(t1);
+})();
+</script>
+</body>
+</html>

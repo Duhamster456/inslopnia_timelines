@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<!--FAVICON-->
+<style>
+/*__THEME__*/
+
+/* =============================== session page =============================== */
+.wrap { max-width: 1520px; margin: 0 auto; padding: 24px 22px 90px; }
+section { margin-top: 22px; scroll-margin-top: 84px; }
+
+/* hero */
+.hero { padding: 20px 24px; }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.hero-main { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-top: 18px; flex-wrap: wrap; }
+.hero-text { min-width: 0; flex: 1 1 520px; }
+.hero h1 { font-size: clamp(26px, 3vw, 38px); line-height: 1.1; letter-spacing: -.005em; }
+.hero .meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 6px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 18px; }
+.hero-foot { display: grid; grid-template-columns: minmax(0, auto) 1fr; gap: 12px; margin-top: 14px; align-items: start; }
+.flagbox {
+  font-family: var(--font-mono); font-size: 13px; padding: 10px 14px; border-radius: var(--radius-md); word-break: break-all;
+  background: linear-gradient(90deg, var(--accent-soft), transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--ring));
+  display: flex; gap: 10px; align-items: center;
+}
+.flagbox b { color: var(--accent); font-family: var(--font-display); letter-spacing: .12em; font-size: 11px; }
+.summary {
+  white-space: pre-wrap; color: var(--ink-2); font-size: 13px; max-height: 4.6em; overflow: hidden; cursor: pointer; padding: 10px 14px;
+  border-radius: var(--radius-md); background: var(--surface-2); border: 1px solid var(--ring);
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent); mask-image: linear-gradient(180deg, #000 60%, transparent);
+}
+.summary.open { max-height: none; -webkit-mask-image: none; mask-image: none; }
+@media (max-width: 800px) { .hero-foot { grid-template-columns: 1fr; } }
+/* embedded in the Explorer: the host app already shows brand + theme switch */
+.embed .hero-top, .embed .hero-main { display: none; }
+.embed .kpis { margin-top: 0; }
+.embed .wrap { padding-top: 16px; }
+
+.section-title .sp { flex: 1; }
+.tools { display: flex; gap: 6px; align-items: center; }
+.tools button { padding: 4px 11px; }
+.tools button.icon { width: 30px; height: 30px; }
+.tnow { font-family: var(--font-mono); font-weight: 600; color: var(--accent); min-width: 78px; font-variant-numeric: tabular-nums; }
+
+/* event-kind filter + the few line/marker meanings */
+.kinds { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.legend { display: inline-flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-left: auto; align-items: center; order: 99; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+
+/* timeline */
+.tl { display: grid; grid-template-columns: 252px 1fr; border: 1px solid var(--ring); border-radius: var(--radius-md); overflow: hidden; background: var(--surface); }
+.tl-labels { border-right: 1px solid var(--grid); background: linear-gradient(90deg, var(--surface-2), var(--surface)); }
+.tl-scroll { overflow-x: auto; overflow-y: hidden; position: relative; }
+#tl { display: block; }
+.lab { display: flex; align-items: center; gap: 9px; padding: 0 12px; font-size: 12px; overflow: hidden; cursor: pointer; transition: background .12s; }
+.lab:hover { background: var(--hl); }
+.lab .role { font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: .06em; min-width: 26px; text-align: center; padding: 2px 5px; border-radius: 6px; color: #fff; flex: none; }
+.lab .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lab .meta { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-mono); }
+.lab.group { font-family: var(--font-display); font-size: 11px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; cursor: default; }
+.lab.group:hover { background: none; }
+svg text { font-family: var(--font-ui); }
+.ax text { font-size: 11px; fill: var(--muted); font-family: var(--font-mono); }
+.mk { cursor: pointer; }
+.mk:hover { filter: brightness(1.15); }
+.dim { opacity: .12; }
+#cur { stroke: var(--accent); }
+#curh { fill: var(--accent); }
+
+/* DAG */
+.dag-grid { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 14px; align-items: start; }
+.dag-box {
+  border: 1px solid var(--ring); border-radius: var(--radius-md); overflow: auto; min-height: 280px; max-height: 660px; position: relative;
+  background: var(--surface);
+}
+.revs { border: 1px solid var(--ring); border-radius: var(--radius-md); background: var(--surface); overflow: auto; max-height: 560px; }
+.rev { display: grid; grid-template-columns: 64px 20px 1fr; gap: 6px; padding: 7px 12px; border-bottom: 1px solid var(--grid); font-size: 12px; cursor: pointer; align-items: start; transition: background .12s; }
+.rev:hover { background: var(--hl); }
+.rev.cur { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.rev.future { opacity: .42; }
+.rev .t { color: var(--muted); font-family: var(--font-mono); font-size: 11.5px; }
+.rev .who { font-weight: 650; }
+.scrub { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.scrub input[type=range] { flex: 1; min-width: 220px; accent-color: var(--accent); background: transparent; border: none; padding: 0; }
+.node { cursor: pointer; }
+.node text { font-size: 11px; fill: var(--ink-2); }
+.node .nid { font-size: 12.5px; font-weight: 650; fill: var(--ink); font-family: var(--font-display); letter-spacing: .02em; }
+.changed { stroke-opacity: .7; }
+
+/* incidents & hypotheses */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.inc {
+  border: 1px solid var(--ring); border-radius: var(--radius-md); padding: 12px 14px 12px 16px; margin-bottom: 10px; cursor: pointer;
+  background: var(--surface); position: relative; overflow: hidden; transition: background .12s;
+}
+.inc::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--sevc, var(--critical)); }
+.inc:hover { background: var(--hl); }
+.inc .tt { font-weight: 650; margin-top: 6px; }
+.inc .d { color: var(--ink-2); font-size: 12.5px; margin-top: 3px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.row-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; }
+.sev { font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; color: #fff; }
+.sev.low { background: var(--neutral); color: var(--ink); } .sev.medium { background: var(--warning); color: #1d1200; }
+.sev.high { background: var(--serious); color: #1d1200; } .sev.critical { background: var(--critical); }
+.st { font-size: 11px; padding: 1px 8px; border-radius: 6px; border: 1px solid var(--ring); color: var(--ink-2); }
+.hyp { padding: 10px 12px; border-bottom: 1px solid var(--grid); cursor: pointer; border-radius: 8px; transition: background .12s; }
+.hyp:hover { background: var(--hl); }
+.hyp.refuted .claim { text-decoration: line-through; color: var(--muted); }
+.hyp .claim { margin-top: 4px; }
+
+/* log */
+.logwrap { max-height: 580px; overflow: auto; border: 1px solid var(--ring); border-radius: var(--radius-md); background: var(--surface); }
+.filters { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+.filters input[type=search] { min-width: 240px; }
+
+/* drawer */
+#drawer {
+  position: fixed; right: 12px; top: 12px; bottom: 12px; width: min(580px, calc(100vw - 24px)); border: 1px solid var(--ring); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); transform: translateX(calc(100% + 24px)); transition: transform .22s cubic-bezier(.2, .8, .2, 1); z-index: 60; display: flex; flex-direction: column;
+}
+#drawer.open { transform: none; }
+#drawer .dh { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--grid); }
+#drawer .dh b { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+#drawer .db { padding: 16px 18px; overflow: auto; font-size: 13px; }
+#drawer pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2); padding: 12px; border-radius: 10px; font-size: 12px; border: 1px solid var(--ring); }
+#drawer h2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 18px 0 8px; }
+.kv { display: grid; grid-template-columns: 116px 1fr; gap: 5px 12px; font-size: 12.5px; }
+.kv div:nth-child(odd) { color: var(--muted); }
+@media (max-width: 960px) { .dag-grid, .two { grid-template-columns: 1fr; } .tl { grid-template-columns: 160px 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="card hero">
+    <div class="hero-top">
+      <div class="brand"><!--LOGO--><span class="brand-word">inslopnia</span></div>
+      <button id="theme" class="icon" title="Сменить тему (ночь / рассвет)">◐</button>
+    </div>
+    <div class="hero-main">
+      <div class="hero-text">
+        <h1 id="h-title"></h1>
+        <div class="meta" id="h-meta"></div>
+      </div>
+      <span id="h-verdict" class="stamp"></span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="hero-foot"><div id="h-flag"></div><div class="summary" id="h-summary" title="клик — развернуть"></div></div>
+  </header>
+
+  <section class="card">
+    <div class="section-title"><h2>Таймлайн агентов</h2><span class="sp"></span>
+      <div class="tools">
+        <button id="clearfocus" style="display:none" title="Снять фокус с шага">✕ фокус</button>
+        <button id="links" class="on" title="Связи оркестрации P→E и сообщения">связи</button>
+        <button id="zout" class="icon" title="Уменьшить (Ctrl+колесо)">−</button><button id="zfit" title="Весь прогон">Fit</button><button id="zin" class="icon" title="Увеличить (Ctrl+колесо)">+</button>
+      </div>
+    </div>
+    <div class="kinds" id="kindchips"><span class="legend" id="legend"></span></div>
+    <div class="tl"><div class="tl-labels" id="tl-labels"></div><div class="tl-scroll" id="tl-scroll"><svg id="tl"></svg></div></div>
+  </section>
+
+  <section class="card" id="dag-sec">
+    <div class="section-title"><h2>Эволюция DAG</h2></div>
+    <div class="scrub">
+      <button id="play" class="primary icon" title="Проиграть историю ревизий">▶</button><button id="prev" class="icon" title="Предыдущая ревизия">◀</button><button id="next" class="icon" title="Следующая ревизия">▶</button>
+      <input type="range" id="slider" min="0" max="1000" value="1000" title="Момент времени (общий курсор с таймлайном)">
+      <span class="tnow" id="sl-now"></span>
+      <span class="muted" style="font-size:12px" id="sl-rev"></span>
+    </div>
+    <div class="dag-grid">
+      <div class="dag-box" id="dag-box"><svg id="dag"></svg></div>
+      <div class="revs" id="revs"></div>
+    </div>
+  </section>
+
+  <section class="two">
+    <div class="card">
+      <div class="section-title"><h2>Инциденты</h2><span class="note" id="inc-count"></span></div>
+      <div id="incidents"></div>
+    </div>
+    <div class="card">
+      <div class="section-title"><h2>Гипотезы</h2><span class="note" id="hyp-count"></span></div>
+      <div id="hyps"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-title"><h2>Журнал событий</h2><span class="note" id="logcount"></span></div>
+    <div class="filters">
+      <input type="search" id="q" placeholder="поиск по событиям…">
+      <select id="fa"><option value="">все агенты</option></select>
+      <select id="fk"><option value="">все типы</option></select>
+    </div>
+    <div class="logwrap"><table><thead><tr><th>T+</th><th>агент</th><th>тип</th><th>шаг</th><th>событие</th><th>токены</th></tr></thead><tbody id="log"></tbody></table></div>
+  </section>
+</div>
+<div id="tip" class="tip"></div>
+<aside id="drawer" class="glass"><div class="dh"><b id="dr-title"></b><button id="dr-close" class="icon">✕</button></div><div class="db" id="dr-body"></div></aside>
+
+<script>
+const M = /*__DATA__*/null;
+(function(){
+"use strict";
+const t0 = M.t0, t1 = Math.max(M.t1, M.t0 + 1), SPAN = t1 - t0;
+const $ = s => document.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+function S(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs||{}) if(attrs[k]!=null) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+function H(tag, attrs, parent, text){ const e=document.createElement(tag); for(const k in attrs||{}) if(attrs[k]!=null) e.setAttribute(k,attrs[k]); if(text!=null) e.textContent=text; if(parent) parent.appendChild(e); return e; }
+const rel = t => { if(t < t0-0.5) return "-"+rel(2*t0-t); let s=Math.max(0,Math.round(t-t0)); const h=Math.floor(s/3600); s-=h*3600; const m=Math.floor(s/60); s-=m*60; return (h? h+":"+String(m).padStart(2,"0") : String(m).padStart(2,"0"))+":"+String(s).padStart(2,"0"); };
+const abs = t => new Date(t*1000).toLocaleString();
+const dur = s => { s=Math.max(0,Math.round(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return h? `${h}ч ${String(m).padStart(2,"0")}м` : m? `${m}м ${String(x).padStart(2,"0")}с` : `${x}с`; };
+const tok = n => { n=n||0; return n>=1e6? (n/1e6).toFixed(2)+"M" : n>=1e3? (n/1e3).toFixed(1)+"k" : String(Math.round(n)); };
+const money = n => "$"+(n||0).toFixed(2);
+const clip = (s,n) => !s? "" : (s.length>n? s.slice(0,n-1)+"…" : s);
+
+const ROLE = {P:["var(--c-violet)","Планировщик P"],E:["var(--c-aqua)","Исполнитель E"],R:["var(--c-yellow)","Исследователь R"],C:["var(--c-magenta)","Критик C"],operator:["var(--c-orange)","Оператор"],runtime:["var(--muted)","Runtime"],other:["var(--c-blue)","Другое"]};
+const ROLE_SHORT = {operator:"OP",runtime:"RT",other:"?"};
+const STATUS = {pending:["var(--neutral)","ожидает","·"],running:["var(--c-blue)","выполняется","▶"],done:["var(--good)","готово","✓"],failed:["var(--critical)","провал","✗"],cancelled:["var(--cancel)","отменён","⊘"],blocked:["var(--warning)","блок","■"],removed:["var(--cancel)","удалён","⌫"],active:["var(--c-violet)","активен","●"],killed:["var(--critical)","убит","✗"]};
+const KIND = {
+  action:["var(--c-blue)","действие","circle"], observation:["var(--c-aqua)","наблюдение","ring"], decision:["var(--c-violet)","решение","diamond"],
+  hypothesis:["var(--c-yellow)","гипотеза","square"], milestone:["var(--c-green)","веха","tri"], message:["var(--c-orange)","сообщение","circle-s"],
+  result:["var(--good)","результат","check"], tool:["var(--muted)","инструмент","dot"], error:["var(--critical)","ошибка","x"],
+  note:["var(--muted)","заметка","ring-s"], incident:["var(--critical)","инцидент","warn"], flag:["var(--c-magenta)","флаг","flag"],
+  outcome:["var(--good)","вердикт","star"], agent_start:["var(--muted)","старт агента","dot"], agent_stop:["var(--muted)","стоп агента","dot"]
+};
+const kindOf = k => KIND[k] || ["var(--c-blue)", k||"?", "circle"];
+const VERD = {solved:"РЕШЕНО ✓",unsolved:"НЕ РЕШЕНО ✗",partial:"ЧАСТИЧНО ◐",in_progress:"В ПРОЦЕССЕ …",abandoned:"БРОШЕНО ⊘"};
+
+/* ---------- header ---------- */
+const ses = M.session, fin = M.final, T = M.totals;
+$("#h-title").textContent = ses.title || "Session";
+(function(){ const f=t=>new Date(t*1000).toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+  $("#h-meta").textContent = [ses.task, ses.meta && ses.meta.model, ses.meta && ses.meta.thinking && ("thinking "+ses.meta.thinking), f(t0)+" → "+f(t1)].filter(Boolean).join("  ·  "); })();
+const vEl = $("#h-verdict"); const vs = fin? fin.status : "none";
+vEl.className = "stamp "+vs; vEl.textContent = fin? (VERD[vs]||vs.toUpperCase()) : "НЕТ ВЕРДИКТА";
+const nodesC = T.nodes||{}; const nTot = Object.values(nodesC).reduce((a,b)=>a+b,0);
+const hypC = {}; M.hyps.forEach(h=>hypC[h.status]=(hypC[h.status]||0)+1);
+const kpi = (l,v,s,title) => { const d=H("div",{class:"kpi",title:title||null},$("#kpis")); H("div",{class:"l"},d,l); const vv=H("div",{class:"v"},d); vv.innerHTML=v; if(s) H("div",{class:"s"},d,s); return d; };
+const big = (a,b) => `${a}${b!=null?` <small>${b}</small>`:""}`;
+kpi("Длительность", dur(SPAN), null, M.phases.length? "фазы: "+M.phases.map(p=>p.name).join(" → ") : null);
+kpi("Токены", tok(T.tokens), money(T.cost), `in ${tok(T.input)} · out ${tok(T.output)} · cache ${tok(T.cache_read)}`);
+kpi("Узлы DAG", nTot? big(nodesC.done||0,"/ "+nTot) : "—", ["failed","cancelled","running","blocked"].filter(k=>nodesC[k]).map(k=>`${STATUS[k][1]} ${nodesC[k]}`).join(" · ") || null);
+kpi("Инциденты", big(T.incidents_open,"/ "+T.incidents), T.incidents? "открыто / всего" : null);
+kpi("Гипотезы", M.hyps.length? big(hypC.confirmed||0,"/ "+M.hyps.length) : "0", M.hyps.length? "подтверждено / всего" : null);
+const flagVal = (fin && fin.flag) || (M.flags.filter(f=>f.status==="accepted").slice(-1)[0]||{}).value;
+if(flagVal){ const fb=H("div",{class:"flagbox"},$("#h-flag")); H("b",{},fb,"FLAG"); H("span",{},fb,flagVal); } else { $("#h-flag").remove(); document.querySelector(".hero-foot").style.gridTemplateColumns="1fr"; }
+if(fin && fin.summary){ const s=$("#h-summary"); s.textContent=fin.summary; s.onclick=()=>s.classList.toggle("open"); } else $("#h-summary").remove();
+if(!flagVal && !(fin && fin.summary)) document.querySelector(".hero-foot").remove();
+
+/* ---------- shared state ---------- */
+let zoom = 1, cursor = t1, focusStep = null, showLinks = true;
+const hiddenKinds = new Set(["agent_start","agent_stop"]);
+const tip = $("#tip");
+function showTip(ev, html){ tip.innerHTML = html; tip.style.display="block"; const r=tip.getBoundingClientRect(); let x=ev.clientX+14, y=ev.clientY+14; if(x+r.width>innerWidth-8) x=ev.clientX-r.width-14; if(y+r.height>innerHeight-8) y=ev.clientY-r.height-14; tip.style.left=x+"px"; tip.style.top=y+"px"; }
+function hideTip(){ tip.style.display="none"; }
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- DAG replay ---------- */
+const OPS = M.dag_ops.slice().sort((a,b)=>a.t-b.t);
+function dagAt(T){
+  const st = {}; let last = -1;
+  OPS.forEach((o,i)=>{ if(o.t> T + 1e-6) return; last=i;
+    let n = st[o.node]; if(!n) n = st[o.node] = {id:o.node, status:"pending", deps:[], objective:"", assignee:null, attempts:0, removed:false, reason:null, touched:o.t};
+    if(o.objective) n.objective=o.objective; if(o.assignee) n.assignee=o.assignee;
+    if(o.deps && (o.op==="add"||o.op==="update")) n.deps=o.deps.slice();
+    if(o.op==="dep_add") (o.deps||[]).forEach(d=>{ if(!n.deps.includes(d)) n.deps.push(d); });
+    if(o.op==="dep_rm") n.deps=n.deps.filter(d=>!(o.deps||[]).includes(d));
+    if(o.op==="status"){ n.status=o.status; if(o.status==="running") n.attempts++; n.reason=o.reason||null; }
+    if(o.op==="remove") n.removed=true;
+    n.touched=o.t; n.lastOp=o;
+  });
+  return {nodes:st, last};
+}
+
+/* ---------- timeline ---------- */
+const LANE_H = 34, AX_H = 30, PH_H = M.phases.length? 22 : 0, TOK_H = 130, PROG_H = 96, GAP = 14, PADL = 14, PADR = 24;
+const lanes = M.agents.map(a=>a.id); const laneIdx = {}; lanes.forEach((a,i)=>laneIdx[a]=i);
+const lanesTop = AX_H + PH_H + 4;
+const laneY = a => lanesTop + laneIdx[a]*LANE_H + LANE_H/2;
+const lanesBottom = lanesTop + lanes.length*LANE_H;
+const tokTop = lanesBottom + GAP + 18, progTop = tokTop + TOK_H + GAP + 18;
+const TOTAL_H = progTop + PROG_H + 26;
+let W = 1000; const X = t => PADL + (t - t0)/SPAN * (W - PADL - PADR);
+const tAtX = x => t0 + (x - PADL)/(W - PADL - PADR) * SPAN;
+
+// precomputed series
+const NS_ = 320;
+const sampleT = Array.from({length:NS_+1},(_,i)=>t0 + SPAN*i/NS_);
+const rolesPresent = [...new Set(M.agents.map(a=>a.role))];
+const tokSeries = (()=>{ const u=M.usage.slice().sort((a,b)=>a.t-b.t); const agRole={}; M.agents.forEach(a=>agRole[a.id]=a.role);
+  const cum={}, cost={}; rolesPresent.forEach(r=>{cum[r]=0;cost[r]=0;}); let j=0; const out=[];
+  sampleT.forEach(t=>{ while(j<u.length && u[j].t<=t){ const r=agRole[u[j].agent]||"other"; cum[r]=(cum[r]||0)+(u[j].tokens||0); cost[r]=(cost[r]||0)+(u[j].cost||0); j++; } out.push({t, v:{...cum}, c:Object.values(cost).reduce((a,b)=>a+b,0)}); });
+  return out; })();
+const progSeries = sampleT.map(t=>{ const s=dagAt(t).nodes; const c={}; Object.values(s).forEach(n=>{ const k=n.removed?"cancelled":n.status; c[k]=(c[k]||0)+1; }); return {t,c}; });
+const PROG_ORDER = ["done","running","blocked","pending","failed","cancelled"];
+
+function niceStep(px){ const target = SPAN * 110 / px; const steps=[1,2,5,10,15,30,60,120,300,600,900,1800,3600,7200,10800,21600,43200,86400]; return steps.find(s=>s>=target)||86400; }
+
+function marker(g, kind, x, y, color, sz){
+  const s = sz||5.5;
+  switch(kind){
+    case "ring": return S("circle",{cx:x,cy:y,r:s-0.5,fill:"var(--surface)",stroke:color,"stroke-width":2},g);
+    case "ring-s": return S("circle",{cx:x,cy:y,r:s-2,fill:"var(--surface)",stroke:color,"stroke-width":1.5},g);
+    case "circle-s": return S("circle",{cx:x,cy:y,r:s-1.5,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+    case "dot": return S("circle",{cx:x,cy:y,r:2.5,fill:color},g);
+    case "diamond": return S("path",{d:`M${x},${y-s-1}L${x+s+1},${y}L${x},${y+s+1}L${x-s-1},${y}Z`,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+    case "square": return S("rect",{x:x-s+1,y:y-s+1,width:2*s-2,height:2*s-2,rx:2,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+    case "tri": return S("path",{d:`M${x},${y-s-1}L${x+s+1},${y+s}L${x-s-1},${y+s}Z`,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+    case "check": { const gg=S("g",{},g); S("circle",{cx:x,cy:y,r:s+0.5,fill:color,stroke:"var(--surface)","stroke-width":1.5},gg); S("path",{d:`M${x-3},${y}l2,2.3l4,-4.6`,fill:"none",stroke:"#fff","stroke-width":1.8,"stroke-linecap":"round"},gg); return gg; }
+    case "x": { const gg=S("g",{},g); S("circle",{cx:x,cy:y,r:s+0.5,fill:color,stroke:"var(--surface)","stroke-width":1.5},gg); S("path",{d:`M${x-2.6},${y-2.6}l5.2,5.2M${x+2.6},${y-2.6}l-5.2,5.2`,stroke:"#fff","stroke-width":1.8,"stroke-linecap":"round"},gg); return gg; }
+    case "warn": { const gg=S("g",{},g); S("path",{d:`M${x},${y-8}L${x+8},${y+6}L${x-8},${y+6}Z`,fill:color,stroke:"var(--surface)","stroke-width":1.5,"stroke-linejoin":"round"},gg); S("text",{x:x,y:y+4.5,"text-anchor":"middle","font-size":10,"font-weight":800,fill:"#fff"},gg).textContent="!"; return gg; }
+    case "flag": { const gg=S("g",{},g); S("path",{d:`M${x-3},${y+8}V${y-8}`,stroke:color,"stroke-width":2,"stroke-linecap":"round"},gg); S("path",{d:`M${x-3},${y-8}h10l-3,4l3,4h-10Z`,fill:color},gg); return gg; }
+    case "star": { const pts=[]; for(let i=0;i<10;i++){ const r=i%2?4:9, a=Math.PI/5*i-Math.PI/2; pts.push((x+r*Math.cos(a)).toFixed(1)+","+(y+r*Math.sin(a)).toFixed(1)); } return S("polygon",{points:pts.join(" "),fill:color,stroke:"var(--surface)","stroke-width":1.5},g); }
+    default: return S("circle",{cx:x,cy:y,r:s,fill:color,stroke:"var(--surface)","stroke-width":1.5},g);
+  }
+}
+
+function itemColor(it){
+  if(it.kind==="incident"){ const sev=(M.incidents.find(i=>i.id===it.iid)||{}).severity; return sev==="low"?"var(--neutral)":sev==="medium"?"var(--warning)":sev==="high"?"var(--serious)":"var(--critical)"; }
+  if(it.kind==="outcome") return it.status==="solved"?"var(--good)":it.status==="partial"?"var(--warning)":it.status==="in_progress"?"var(--c-blue)":"var(--critical)";
+  if(it.kind==="flag") return it.status==="rejected"?"var(--critical)":it.status==="accepted"?"var(--good)":"var(--c-magenta)";
+  if(it.kind==="hypothesis"){ const h=M.hyps.find(x=>x.id===it.hid); const s=it.status||(h&&h.status); return s==="confirmed"?"var(--good)":s==="refuted"?"var(--critical)":"var(--c-yellow)"; }
+  return kindOf(it.kind)[0];
+}
+function itemLane(it){ const a = it.agent || it.by; if(a && a in laneIdx) return a; if(it.kind==="outcome"||it.kind==="flag") return lanes.find(l=>M.agents[laneIdx[l]].role==="P") || lanes[0]; return lanes[0]; }
+function itemStep(it){ return it.step || null; }
+
+function drawTimeline(){
+  const sc = $("#tl-scroll"); const baseW = Math.max(600, sc.clientWidth - 1);
+  W = Math.round(baseW * zoom);
+  const svg = $("#tl"); svg.innerHTML=""; svg.setAttribute("width",W); svg.setAttribute("height",TOTAL_H);
+  // labels column
+  const lab = $("#tl-labels"); lab.innerHTML="";
+  const pad = H("div",{},lab); pad.style.height = (lanesTop)+"px"; pad.className="lab group"; pad.style.alignItems="flex-end"; pad.style.paddingBottom="4px"; pad.textContent = "";
+  M.agents.forEach((a,i)=>{
+    const d=H("div",{class:"lab"},lab); d.style.height=LANE_H+"px"; if(i%2) d.style.background="var(--lane-alt)";
+    const rc=ROLE[a.role]||ROLE.other; const r=H("span",{class:"role"},d,ROLE_SHORT[a.role]||a.role); r.style.background=rc[0];
+    const box=H("div",{},d); box.style.minWidth="0";
+    H("div",{class:"nm"},box,a.id.replace(/^[ER]:/,"")); if(a.tokens) H("div",{class:"meta"},box,[tok(a.tokens)+" tok", a.cost? money(a.cost):null].filter(Boolean).join(" · "));
+    d.title = `${a.id}\n${a.label||""}\nмодель: ${a.model||"?"}\nтокены: ${tok(a.tokens)}  стоимость: ${money(a.cost)}\nактивен: ${dur(a.spans.reduce((s,x)=>s+x[1]-x[0],0))}\nсобытий: ${a.events}`;
+    d.onclick = () => { if(a.steps && a.steps.length) setFocus(focusStep===a.steps[0]?null:a.steps[0]); openAgent(a); };
+  });
+  const lt=H("div",{class:"lab group"},lab); lt.style.height=(tokTop-lanesBottom)+"px"; lt.style.alignItems="flex-end"; lt.textContent="";
+  const l2=H("div",{class:"lab"},lab); l2.style.height=TOK_H+"px"; l2.style.alignItems="flex-start"; l2.innerHTML=`<div class="nm">Токены</div>`; l2.title="накопленные токены, стек по ролям";
+  const l3=H("div",{class:"lab"},lab); l3.style.height=(progTop-tokTop-TOK_H)+"px";
+  const l4=H("div",{class:"lab"},lab); l4.style.height=PROG_H+"px"; l4.style.alignItems="flex-start"; l4.innerHTML=`<div class="nm">Прогресс DAG</div>`; l4.title="узлы DAG по статусам";
+
+  const gGrid=S("g",{},svg), gPh=S("g",{},svg), gLanes=S("g",{},svg), gLinks=S("g",{},svg), gMk=S("g",{},svg), gCh=S("g",{},svg), gCur=S("g",{},svg);
+  // lane backgrounds
+  lanes.forEach((a,i)=>{ if(i%2) S("rect",{x:0,y:lanesTop+i*LANE_H,width:W,height:LANE_H,fill:"var(--lane-alt)"},gGrid); });
+  // axis + gridlines
+  const step = niceStep(W); const ax=S("g",{class:"ax"},gGrid);
+  for(let s=0; s<=SPAN+1e-6; s+=step){ const x=X(t0+s);
+    S("line",{x1:x,x2:x,y1:AX_H-6,y2:TOTAL_H-24,stroke:"var(--grid)","stroke-width":1},gGrid);
+    const lbl = s>=3600? `${Math.floor(s/3600)}ч${String(Math.floor(s%3600/60)).padStart(2,"0")}` : s>=60? `${Math.round(s/60)}м` : `${s}с`;
+    S("text",{x:x,y:16,"text-anchor":"middle"},ax).textContent = "+"+lbl;
+    S("text",{x:x,y:TOTAL_H-8,"text-anchor":"middle"},ax).textContent = new Date((t0+s)*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+  }
+  S("line",{x1:0,x2:W,y1:AX_H-2,y2:AX_H-2,stroke:"var(--axis)"},gGrid);
+  const axHit=S("rect",{x:0,y:0,width:W,height:AX_H,fill:"transparent",style:"cursor:col-resize"},gGrid);
+  let dragging=false; axHit.addEventListener("mousedown",e=>{dragging=true; setCursorFromEvent(e);});
+  window.addEventListener("mousemove",e=>{ if(dragging) setCursorFromEvent(e); }); window.addEventListener("mouseup",()=>dragging=false);
+  // phases
+  M.phases.forEach((p,i)=>{ const x1=X(p.start), x2=Math.max(X(p.end), x1+3); const c=["var(--c-blue)","var(--c-orange)","var(--c-aqua)","var(--c-violet)"][i%4];
+    const r=S("rect",{x:x1,y:AX_H+2,width:x2-x1,height:PH_H-4,rx:4,fill:c,"fill-opacity":.18,stroke:c,"stroke-opacity":.6},gPh);
+    S("text",{x:x1+5,y:AX_H+PH_H/2+4,"font-size":11,fill:"var(--ink-2)"},gPh).textContent=p.name+(p.open?" …":"");
+    r.addEventListener("mousemove",e=>showTip(e,`<b>фаза: ${esc(p.name)}</b><div class="tm">${rel(p.start)} → ${rel(p.end)} (${dur(p.end-p.start)})</div>${esc(p.note||"")}`)); r.addEventListener("mouseleave",hideTip);
+    S("rect",{x:x1,y:lanesTop,width:x2-x1,height:lanesBottom-lanesTop,fill:c,"fill-opacity":.035},gPh);
+  });
+  // lane spans
+  M.agents.forEach(a=>{
+    const y=laneY(a.id);
+    // node runs for step-bound agents (status-colored), else role-colored spans
+    a.spans.forEach(([s,e,st])=>{
+      const c = (st==="active"||!STATUS[st]||!(a.steps&&a.steps.length))? (ROLE[a.role]||ROLE.other)[0] : STATUS[st][0];
+      const x1=X(s), x2=Math.max(X(e), x1+3);
+      const step = (a.steps||[])[0]||null;
+      const g=S("g",{class:"mk","data-step":step||""},gLanes);
+      S("rect",{x:x1,y:y-8,width:x2-x1,height:16,rx:4,fill:c,"fill-opacity":.2,stroke:c,"stroke-opacity":.85,"stroke-width":1.2},g);
+      if(st && STATUS[st] && st!=="running" && st!=="active" && x2-x1>14) S("text",{x:x2-4,y:y+4,"text-anchor":"end","font-size":11,"font-weight":700,fill:c},g).textContent=STATUS[st][2];
+      g.addEventListener("mousemove",ev=>showTip(ev,`<b>${esc(a.id)}</b> · ${esc((STATUS[st]||[0,st])[1])}<div class="tm">${rel(s)} → ${rel(e)} · ${dur(e-s)}</div>${esc(clip(a.label||"",200))}`));
+      g.addEventListener("mouseleave",hideTip);
+      g.addEventListener("click",ev=>{ setCursor(tAtX(ev.offsetX)); if(step) setFocus(step); openAgent(a); });
+    });
+  });
+  // orchestration links: dag ops (by -> assignee) and messages (agent -> to)
+  if(showLinks){
+    const link=(xa,ya,xb,yb,color,dash,meta)=>{ const mid=(ya+yb)/2; const p=S("path",{d:`M${xa},${ya} C${xa+18},${mid} ${xb-18},${mid} ${xb},${yb}`,fill:"none",stroke:color,"stroke-width":1.4,"stroke-opacity":.7,"stroke-dasharray":dash||null,class:"mk","data-step":meta.step||""},gLinks);
+      S("circle",{cx:xb,cy:yb,r:2.5,fill:color,"data-step":meta.step||""},gLinks);
+      p.addEventListener("mousemove",e=>showTip(e,meta.html)); p.addEventListener("mouseleave",hideTip); p.addEventListener("click",()=>{ setCursor(meta.t); meta.click&&meta.click(); }); };
+    OPS.forEach(o=>{ const n=M.nodes.find(n=>n.id===o.node); const asg=(n&&n.assignee)||o.assignee; if(!o.by||!(o.by in laneIdx)||!asg||!(asg in laneIdx)||o.by===asg) return;
+      if(!(o.op==="add"||(o.op==="status"&&(o.status==="running"||o.status==="cancelled"))||o.op==="update")) return;
+      const c = o.op==="add"? "var(--c-violet)" : o.status==="cancelled"? "var(--cancel)" : o.op==="update"? "var(--c-violet)" : "var(--c-blue)";
+      link(X(o.t),laneY(o.by),X(o.t)+(o.op==="add"?0:0),laneY(asg),c,o.op==="add"?"4 3":null,{t:o.t,step:o.node,html:`<b>${esc(o.by)} → ${esc(asg)}</b>: ${esc(opLabel(o))}<div class="tm">T+${rel(o.t)}</div>`,click:()=>setFocus(o.node)}); });
+    M.items.forEach(it=>{ if(!it.to||!(it.to in laneIdx)||!it.agent||!(it.agent in laneIdx)||it.to===it.agent) return; if(hiddenKinds.has(it.kind)) return;
+      link(X(it.t),laneY(it.agent),X(it.t),laneY(it.to),kindOf(it.kind)[0],"2 3",{t:it.t,step:it.step,html:`<b>${esc(it.agent)} → ${esc(it.to)}</b> · ${esc(kindOf(it.kind)[1])}<div class="tm">T+${rel(it.t)}</div>${esc(clip(it.title,300))}`,click:()=>openItem(it)}); });
+  }
+  // dag op markers on 'by' lanes
+  OPS.forEach(o=>{ if(!o.by||!(o.by in laneIdx)) return; const y=laneY(o.by), x=X(o.t);
+    const c = o.op==="status"? (STATUS[o.status]||STATUS.pending)[0] : "var(--c-violet)";
+    const g=S("g",{class:"mk","data-step":o.node},gMk);
+    S("rect",{x:x-4,y:y-4,width:8,height:8,transform:`rotate(45 ${x} ${y})`,fill:"var(--surface)",stroke:c,"stroke-width":2},g);
+    g.addEventListener("mousemove",e=>showTip(e,`<b>DAG: ${esc(opLabel(o))}</b><div class="tm">T+${rel(o.t)} · ${esc(o.by)}</div>`)); g.addEventListener("mouseleave",hideTip);
+    g.addEventListener("click",()=>{ setCursor(o.t); setFocus(o.node); });
+  });
+  // items
+  M.items.forEach(it=>{ if(hiddenKinds.has(it.kind)) return; const lane=itemLane(it); if(lane==null) return;
+    const x=X(it.t), y=laneY(lane); const k=kindOf(it.kind);
+    const g=S("g",{class:"mk","data-step":itemStep(it)||""},gMk); marker(g,k[2],x,y,itemColor(it), it.kind==="outcome"?7:5.5);
+    S("rect",{x:x-7,y:y-10,width:14,height:20,fill:"transparent"},g);
+    g.addEventListener("mousemove",e=>showTip(e,`<b>${esc(k[1])}</b> · ${esc(it.agent||it.by||"")}${it.to?" → "+esc(it.to):""}${it.step?` · шаг <b>${esc(it.step)}</b>`:""}<div class="tm">T+${rel(it.t)}${it.tokens?` · +${tok(it.tokens)} tok`:""}</div>${esc(clip(it.title,300))}`));
+    g.addEventListener("mouseleave",hideTip); g.addEventListener("click",()=>openItem(it));
+  });
+  // lane click -> cursor
+  S("rect",{x:0,y:lanesTop,width:W,height:lanesBottom-lanesTop,fill:"transparent"},gGrid).addEventListener("click",e=>setCursor(tAtX(e.offsetX)));
+  drawTokens(gCh); drawProgress(gCh);
+  // cursor
+  const cx=X(cursor);
+  S("line",{id:"cur",x1:cx,x2:cx,y1:AX_H-4,y2:TOTAL_H-22,stroke:"var(--ink)","stroke-width":1.5,"stroke-dasharray":"3 3",opacity:.65},gCur);
+  S("path",{id:"curh",d:`M${cx-6},${AX_H-12}h12l-6,8z`,fill:"var(--ink)"},gCur);
+  applyFocus();
+}
+function setCursorFromEvent(e){ const r=$("#tl").getBoundingClientRect(); setCursor(tAtX(e.clientX-r.left)); }
+
+function drawTokens(g){
+  const y0=tokTop+TOK_H, top=tokTop; const max=Math.max(1, ...tokSeries.map(p=>Object.values(p.v).reduce((a,b)=>a+b,0)));
+  [0.5,1].forEach(f=>{ const y=y0-(TOK_H-6)*f; S("line",{x1:PADL,x2:W-PADR,y1:y,y2:y,stroke:"var(--grid)","stroke-dasharray":"2 3"},g); S("text",{x:W-PADR-2,y:y-3,"text-anchor":"end","font-size":10,fill:"var(--muted)"},g).textContent=tok(max*f); });
+  S("line",{x1:PADL,x2:W-PADR,y1:y0,y2:y0,stroke:"var(--axis)"},g);
+  if(!M.usage.length){ S("text",{x:PADL+8,y:top+TOK_H/2,"font-size":12,fill:"var(--muted)"},g).textContent="нет данных о токенах"; return; }
+  const order = ["P","E","R","C","operator","other","runtime"].filter(r=>rolesPresent.includes(r));
+  const base = tokSeries.map(()=>0);
+  order.forEach(r=>{ const c=(ROLE[r]||ROLE.other)[0]; const up=[], dn=[];
+    tokSeries.forEach((p,i)=>{ const v=p.v[r]||0; const yb=y0-(TOK_H-6)*base[i]/max; const yt=y0-(TOK_H-6)*(base[i]+v)/max; dn.push([X(p.t),yb]); up.push([X(p.t),yt]); base[i]+=v; });
+    if(up.every((p,i)=>Math.abs(p[1]-dn[i][1])<0.01)) return;
+    const d="M"+up.map(p=>p.join(",")).join("L")+"L"+dn.reverse().map(p=>p.join(",")).join("L")+"Z";
+    const gid="tokg-"+r; const lg=S("linearGradient",{id:gid,x1:0,x2:0,y1:0,y2:1},S("defs",{},g));
+    S("stop",{offset:0,"stop-color":c,"stop-opacity":.55},lg); S("stop",{offset:1,"stop-color":c,"stop-opacity":.06},lg);
+    S("path",{d,fill:`url(#${gid})`,stroke:"none"},g);
+    S("path",{d:"M"+up.map(p=>p.join(",")).join("L"),fill:"none",stroke:c,"stroke-width":2,"stroke-linejoin":"round"},g);
+  });
+  const hit=S("rect",{x:PADL,y:top,width:W-PADL-PADR,height:TOK_H,fill:"transparent"},g);
+  const vline=S("line",{x1:0,x2:0,y1:top,y2:y0,stroke:"var(--ink-2)","stroke-width":1,opacity:0},g);
+  hit.addEventListener("mousemove",e=>{ const t=tAtX(e.offsetX); const i=Math.max(0,Math.min(NS_,Math.round((t-t0)/SPAN*NS_))); const p=tokSeries[i];
+    vline.setAttribute("x1",X(p.t)); vline.setAttribute("x2",X(p.t)); vline.setAttribute("opacity",.6);
+    const tot=Object.values(p.v).reduce((a,b)=>a+b,0);
+    showTip(e,`<b>T+${rel(p.t)}</b> · всего ${tok(tot)} · ${money(p.c)}<br>`+order.map(r=>`<span class="sw" style="background:${ROLE[r][0]}"></span> ${ROLE[r][1]}: ${tok(p.v[r]||0)}`).join("<br>")); });
+  hit.addEventListener("mouseleave",()=>{ hideTip(); vline.setAttribute("opacity",0); });
+  hit.addEventListener("click",e=>setCursor(tAtX(e.offsetX)));
+}
+function drawProgress(g){
+  const y0=progTop+PROG_H, top=progTop; const max=Math.max(1,...progSeries.map(p=>Object.values(p.c).reduce((a,b)=>a+b,0)));
+  S("line",{x1:PADL,x2:W-PADR,y1:y0,y2:y0,stroke:"var(--axis)"},g);
+  S("text",{x:W-PADR-2,y:top+8,"text-anchor":"end","font-size":10,fill:"var(--muted)"},g).textContent=max+" узл.";
+  if(!OPS.length){ S("text",{x:PADL+8,y:top+PROG_H/2,"font-size":12,fill:"var(--muted)"},g).textContent="DAG не записан"; return; }
+  const base=progSeries.map(()=>0);
+  PROG_ORDER.forEach(k=>{ const c=STATUS[k][0]; const up=[],dn=[];
+    progSeries.forEach((p,i)=>{ const v=p.c[k]||0; const x=X(p.t); dn.push([x,y0-(PROG_H-8)*base[i]/max]); up.push([x,y0-(PROG_H-8)*(base[i]+v)/max]); base[i]+=v; });
+    if(up.every((p,i)=>Math.abs(p[1]-dn[i][1])<0.01)) return;
+    S("path",{d:"M"+up.map(p=>p.join(",")).join("L")+"L"+dn.reverse().map(p=>p.join(",")).join("L")+"Z",fill:c,"fill-opacity":k==="pending"?.45:.6,stroke:"var(--surface)","stroke-width":.8},g);
+  });
+  const hit=S("rect",{x:PADL,y:top,width:W-PADL-PADR,height:PROG_H,fill:"transparent"},g);
+  hit.addEventListener("mousemove",e=>{ const t=tAtX(e.offsetX); const i=Math.max(0,Math.min(NS_,Math.round((t-t0)/SPAN*NS_))); const p=progSeries[i];
+    showTip(e,`<b>T+${rel(p.t)}</b><br>`+PROG_ORDER.filter(k=>p.c[k]).map(k=>`<span class="sw" style="background:${STATUS[k][0]}"></span> ${STATUS[k][1]}: ${p.c[k]}`).join("<br>")); });
+  hit.addEventListener("mouseleave",hideTip); hit.addEventListener("click",e=>setCursor(tAtX(e.offsetX)));
+}
+
+function opLabel(o){
+  switch(o.op){
+    case "add": return `+ ${o.node}${o.deps&&o.deps.length?" ← "+o.deps.join(","):""}${o.objective?": "+clip(o.objective,90):""}`;
+    case "status": return `${o.node}: ${(STATUS[o.prev]||[0,o.prev||"?"])[1]} → ${(STATUS[o.status]||[0,o.status])[1]}${o.reason?" ("+clip(o.reason,80)+")":""}`;
+    case "update": return `~ ${o.node}${o.fields?" ["+o.fields.join(",")+"]":""}${o.deps?" deps→"+(o.deps.join(",")||"∅"):""}${o.note?": "+clip(o.note,80):""}`;
+    case "remove": return `⌫ ${o.node}${o.reason?" ("+clip(o.reason,80)+")":""}`;
+    case "dep_add": return `+ ребро ${(o.deps||[]).join(",")} → ${o.node}`;
+    case "dep_rm": return `− ребро ${(o.deps||[]).join(",")} → ${o.node}`;
+  } return o.op+" "+o.node;
+}
+
+/* ---------- legend & chips ---------- */
+(function(){
+  const lg=$("#legend");
+  const add=(html)=>{ const s=H("span",{},lg); s.innerHTML=html; };
+  add(`<svg width="12" height="12"><rect x="2" y="2" width="8" height="8" transform="rotate(45 6 6)" fill="none" stroke="var(--c-violet)" stroke-width="2"/></svg>правка DAG`);
+  add(`<svg width="26" height="10"><path d="M1,5H25" stroke="var(--c-violet)" stroke-dasharray="4 3" stroke-width="1.5"/></svg>поручение P→E`);
+  add(`<svg width="26" height="10"><path d="M1,5H25" stroke="var(--c-orange)" stroke-dasharray="2 3" stroke-width="1.5"/></svg>сообщение`);
+  const kinds=[...new Set(M.items.map(i=>i.kind))].filter(k=>k!=="agent_start"&&k!=="agent_stop"); // service kinds stay hidden
+  const chips=$("#kindchips");
+  kinds.forEach(k=>{ const kk=kindOf(k); const c=H("span",{class:"chip"+(hiddenKinds.has(k)?" off":"")},chips); c.style.cursor="pointer";
+    const sv=S("svg",{width:14,height:14},null); marker(sv,kk[2],7,7,kk[0],4.5); c.appendChild(sv); H("span",{},c,kk[1]); c.title=`${M.items.filter(i=>i.kind===k).length} шт. · клик — скрыть/показать`;
+    c.onclick=()=>{ hiddenKinds.has(k)?hiddenKinds.delete(k):hiddenKinds.add(k); c.classList.toggle("off"); drawTimeline(); }; });
+})();
+
+/* ---------- DAG view ---------- */
+const NW=230, NH=74, CG=64, RG=16, MAXCOL=7;
+const allNodes = M.nodes.slice().sort((a,b)=>a.added-b.added);
+const layout = (()=>{ const by={}; allNodes.forEach(n=>by[n.id]=n); const depth={};
+  // union of all deps ever seen for stable layout
+  const deps={}; allNodes.forEach(n=>deps[n.id]=new Set(n.deps)); OPS.forEach(o=>{ if(o.deps&&deps[o.node]) o.deps.forEach(d=>deps[o.node].add(d)); });
+  const d=(id,seen)=>{ if(depth[id]!=null) return depth[id]; if(seen.has(id)) return 0; seen.add(id); const ds=[...(deps[id]||[])].filter(x=>by[x]); depth[id]= ds.length? 1+Math.max(...ds.map(x=>d(x,seen))) : 0; return depth[id]; };
+  allNodes.forEach(n=>d(n.id,new Set()));
+  const layers={}; allNodes.forEach(n=>(layers[depth[n.id]]=layers[depth[n.id]]||[]).push(n));
+  const pos={}; let col=0, maxRows=0;
+  Object.keys(layers).map(Number).sort((a,b)=>a-b).forEach(L=>{ const arr=layers[L]; for(let i=0;i<arr.length;i+=MAXCOL){ const chunk=arr.slice(i,i+MAXCOL); chunk.forEach((n,j)=>pos[n.id]={x:20+col*(NW+CG), y:20+j*(NH+RG)}); maxRows=Math.max(maxRows,chunk.length); col++; } });
+  return {pos, w:40+col*(NW+CG)-CG, h:40+maxRows*(NH+RG)-RG};
+})();
+function drawDag(){
+  const svg=$("#dag"); svg.innerHTML="";
+  if(!allNodes.length){ $("#dag-box").innerHTML='<div class="empty">DAG не записан</div>'; return; }
+  svg.setAttribute("width",Math.max(layout.w,300)); svg.setAttribute("height",Math.max(layout.h,200));
+  const defs=S("defs",{},svg); const mk=S("marker",{id:"arr",viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:7,markerHeight:7,orient:"auto-start-reverse"},defs); S("path",{d:"M0,0L10,5L0,10z",fill:"var(--axis)"},mk);
+  const st=dagAt(cursor); const lastOp = st.last>=0? OPS[st.last] : null;
+  const gE=S("g",{},svg), gN=S("g",{},svg);
+  allNodes.forEach(n=>{ const s=st.nodes[n.id]; if(!s) return; const p=layout.pos[n.id];
+    s.deps.forEach(dp=>{ const q=layout.pos[dp]; if(!q||!st.nodes[dp]) return; const x1=q.x+NW, y1=q.y+NH/2, x2=p.x, y2=p.y+NH/2;
+      const path = x2>x1 ? `M${x1},${y1} C${x1+CG/2},${y1} ${x2-CG/2},${y2} ${x2-2},${y2}` : `M${q.x+NW/2},${q.y+NH} C${q.x+NW/2},${q.y+NH+30} ${p.x+NW/2},${p.y-30} ${p.x+NW/2},${p.y-2}`;
+      S("path",{d:path,fill:"none",stroke:"var(--axis)","stroke-width":1.6,"marker-end":"url(#arr)",opacity:(s.removed||s.status==="cancelled")?.4:1},gE); });
+  });
+  allNodes.forEach(n=>{ const s=st.nodes[n.id]; const p=layout.pos[n.id];
+    const g=S("g",{class:"node",transform:`translate(${p.x},${p.y})`},gN);
+    if(!s){ S("rect",{width:NW,height:NH,rx:9,fill:"none",stroke:"var(--grid)","stroke-dasharray":"4 4"},g); S("text",{x:12,y:22,class:"nid",opacity:.35},g).textContent=n.id; S("text",{x:12,y:40,opacity:.45},g).textContent=`появится в T+${rel(n.added)}`; g.onclick=()=>{ setCursor(n.added); }; return; }
+    const stt = s.removed? "removed" : s.status; const c=(STATUS[stt]||STATUS.pending)[0];
+    const faded = s.removed || stt==="cancelled";
+    S("rect",{width:NW,height:NH,rx:9,fill:"var(--surface)",stroke:focusStep===n.id?"var(--ink)":"var(--ring)","stroke-width":focusStep===n.id?2:1,opacity:faded?.55:1,"stroke-dasharray":s.removed?"4 4":null},g);
+    S("rect",{x:0,y:0,width:6,height:NH,rx:3,fill:c,opacity:faded?.6:1},g);
+    S("rect",{x:6,y:0,width:NW-6,height:NH,rx:9,fill:c,"fill-opacity":stt==="pending"?0.04:0.10},g);
+    if(lastOp && lastOp.node===n.id) S("rect",{x:-4,y:-4,width:NW+8,height:NH+8,rx:12,fill:"none",stroke:c,"stroke-width":2.5,class:"changed"},g);
+    S("text",{x:14,y:18,class:"nid",opacity:faded?.6:1},g).textContent=clip(n.id,30);
+    const obj=s.objective||n.objective||""; S("text",{x:14,y:34},g).textContent=clip(obj,36); S("text",{x:14,y:47},g).textContent=clip(obj.slice(35),36);
+    S("text",{x:14,y:65,"font-size":11,"font-weight":700,fill:c},g).textContent=(STATUS[stt]||STATUS.pending)[2]+" "+(STATUS[stt]||STATUS.pending)[1];
+    S("text",{x:NW-10,y:65,"text-anchor":"end","font-size":10,fill:"var(--muted)"},g).textContent=[s.assignee?clip(s.assignee,18):null, s.attempts>1?`×${s.attempts}`:null].filter(Boolean).join(" · ");
+    const evs=M.items.filter(i=>i.step===n.id && i.t<=cursor);
+    g.addEventListener("mousemove",e=>showTip(e,`<b>${esc(n.id)}</b> · ${esc((STATUS[stt]||[0,stt])[1])}${s.assignee?` · ${esc(s.assignee)}`:""}<div class="tm">добавлен T+${rel(n.added)} (${esc(n.added_by||"?")}) · deps: ${esc(s.deps.join(", ")||"—")}</div>${esc(clip(obj,400))}${s.reason?`<div class="tm">${esc(clip(s.reason,300))}</div>`:""}<div class="tm">событий к этому моменту: ${evs.length}</div>`));
+    g.addEventListener("mouseleave",hideTip);
+    g.addEventListener("click",()=>{ setFocus(focusStep===n.id?null:n.id); openNode(n); });
+  });
+}
+function drawRevs(){
+  const box=$("#revs"); box.innerHTML="";
+  if(!OPS.length){ box.innerHTML='<div class="empty">нет ревизий</div>'; return; }
+  const st=dagAt(cursor);
+  OPS.forEach((o,i)=>{ const r=H("div",{class:"rev"+(i===st.last?" cur":"")+(o.t>cursor+1e-6?" future":"")},box);
+    H("div",{class:"t"},r,"T+"+rel(o.t));
+    const c=o.op==="status"?(STATUS[o.status]||STATUS.pending)[0]:"var(--c-violet)"; const ic=H("div",{},r, o.op==="add"?"+":o.op==="status"?(STATUS[o.status]||[0,0,"?"])[2]:o.op==="remove"?"⌫":"~"); ic.style.color=c; ic.style.fontWeight="700";
+    const d=H("div",{},r); H("span",{class:"who"},d,(o.by||"?")+" "); H("span",{},d,opLabel(o));
+    r.onclick=()=>{ setCursor(o.t); setFocus(o.node); };
+    if(i===st.last) requestAnimationFrame(()=>{ const bt=box.scrollTop, bh=box.clientHeight; if(r.offsetTop<bt||r.offsetTop>bt+bh-30) box.scrollTop=r.offsetTop-bh/2; });
+  });
+}
+
+/* ---------- cursor & focus ---------- */
+const slider=$("#slider");
+function setCursor(t){ cursor=Math.max(t0,Math.min(t1,t)); slider.value=Math.round((cursor-t0)/SPAN*1000);
+  const cx=X(cursor); const l=$("#cur"); if(l){ l.setAttribute("x1",cx); l.setAttribute("x2",cx); $("#curh").setAttribute("d",`M${cx-6},${AX_H-12}h12l-6,8z`); }
+  $("#sl-now").textContent="T+"+rel(cursor);
+  const st=dagAt(cursor); $("#sl-rev").textContent = OPS.length? `ревизия ${st.last+1} / ${OPS.length}` : "";
+  drawDag(); drawRevs(); }
+slider.oninput=()=>{ stopPlay(); setCursor(t0+SPAN*slider.value/1000); };
+$("#prev").onclick=()=>{ stopPlay(); const st=dagAt(cursor); const i=Math.max(0,(OPS[st.last]&&Math.abs(OPS[st.last].t-cursor)<1e-3)?st.last-1:st.last); if(OPS[i]) setCursor(OPS[i].t); };
+$("#next").onclick=()=>{ stopPlay(); const st=dagAt(cursor); const o=OPS.find((o,i)=>i>st.last); if(o) setCursor(o.t); };
+let playT=null; function stopPlay(){ if(playT){ clearInterval(playT); playT=null; $("#play").textContent="▶"; } }
+$("#play").onclick=()=>{ if(playT){ stopPlay(); return; } if(!OPS.length) return; let i = cursor>=t1-1e-3? 0 : dagAt(cursor).last+1; $("#play").textContent="❚❚";
+  setCursor(OPS[Math.min(i,OPS.length-1)].t); playT=setInterval(()=>{ i++; if(i>=OPS.length){ setCursor(t1); stopPlay(); return; } setCursor(OPS[i].t); },900); };
+function setFocus(step){ focusStep=step; $("#clearfocus").style.display=step?"":"none"; applyFocus(); drawDag(); }
+$("#clearfocus").onclick=()=>setFocus(null);
+function applyFocus(){ document.querySelectorAll("#tl [data-step]").forEach(e=>{ const s=e.getAttribute("data-step"); e.classList.toggle("dim", !!focusStep && s!==focusStep); }); }
+
+/* ---------- incidents / hyps / agents ---------- */
+(function(){
+  const box=$("#incidents"); const inc=M.incidents.slice().sort((a,b)=>a.created-b.created);
+  $("#inc-count").textContent = inc.length? `${M.totals.incidents_open} открыто / ${inc.length}` : "";
+  if(!inc.length) box.innerHTML='<div class="empty">инцидентов не зафиксировано</div>';
+  const SC={low:"var(--neutral)",medium:"var(--warning)",high:"var(--serious)",critical:"var(--critical)"};
+  inc.forEach(i=>{ const d=H("div",{class:"inc"},box); d.style.setProperty("--sevc",SC[i.severity]||SC.medium); if(i.status==="resolved"||i.status==="wontfix") d.style.opacity=.6; else if(i.status==="mitigated") d.style.opacity=.85;
+    const h=H("div",{class:"row-meta"},d);
+    H("span",{class:"sev "+i.severity},h,i.severity); H("span",{class:"muted"},h,[i.category, ({resolved:"✓ ",mitigated:"◐ ",wontfix:"⊘ ",investigating:"… "}[i.status]||"")+i.status, "T+"+rel(i.created), i.step].filter(Boolean).join(" · "));
+    H("div",{class:"tt"},d,i.title);
+    if(i.detail) H("div",{class:"d"},d,i.detail);
+    d.onclick=()=>{ setCursor(i.created); if(i.step) setFocus(i.step); openIncident(i); };
+  });
+  const hb=$("#hyps"); const hy=M.hyps.slice().sort((a,b)=>a.created-b.created); $("#hyp-count").textContent=hy.length? String(hy.length):"";
+  if(!hy.length) hb.innerHTML='<div class="empty">гипотез не записано</div>';
+  const HC={open:"var(--neutral)",testing:"var(--c-blue)",confirmed:"var(--good)",refuted:"var(--critical)",abandoned:"var(--cancel)"};
+  hy.forEach(h=>{ const d=H("div",{class:"hyp "+h.status},hb); const top=H("div",{class:"row-meta"},d);
+    const s=H("span",{class:"st"},top,h.status); s.style.background=HC[h.status]||HC.open; s.style.color=(h.status==="open"||h.status==="abandoned")?"var(--ink)":"#fff"; s.style.border="none";
+    H("b",{},top,h.id); H("span",{class:"muted"},top,"T+"+rel(h.created)+(h.step?" · "+h.step:""));
+    H("div",{class:"claim"},d,h.claim);
+    const ev=h.history.filter(x=>x.evidence).slice(-1)[0]; if(ev) H("div",{class:"muted"},d,"↳ "+clip(ev.evidence,200)).style.fontSize="12px";
+    d.onclick=()=>{ setCursor(h.updated||h.created); if(h.step) setFocus(h.step); openHyp(h); }; });
+})();
+
+/* ---------- log ---------- */
+(function(){
+  const fa=$("#fa"), fk=$("#fk");
+  M.agents.forEach(a=>H("option",{value:a.id},fa,a.id));
+  [...new Set(M.items.map(i=>i.kind))].forEach(k=>H("option",{value:k},fk,kindOf(k)[1]));
+  const body=$("#log");
+  function render(){ body.innerHTML=""; const q=$("#q").value.toLowerCase(); let n=0;
+    M.items.forEach(it=>{ if(fa.value && it.agent!==fa.value && it.to!==fa.value && it.by!==fa.value) return; if(fk.value && it.kind!==fk.value) return;
+      if(q && !((it.title||"")+" "+(it.detail||"")+" "+(it.step||"")).toLowerCase().includes(q)) return; n++;
+      if(n>3000) return;
+      const r=H("tr",{class:"r"},body); H("td",{class:"t"},r,rel(it.t)); H("td",{},r,(it.agent||it.by||"")+(it.to?" → "+it.to:""));
+      const kc=H("td",{},r); const sv=S("svg",{width:14,height:14}); marker(sv,kindOf(it.kind)[2],7,7,itemColor(it),4.5); kc.appendChild(sv); kc.appendChild(document.createTextNode(" "+kindOf(it.kind)[1])); kc.style.whiteSpace="nowrap";
+      H("td",{},r,it.step||""); H("td",{},r,clip(it.title,220)); H("td",{class:"t"},r,it.tokens?tok(it.tokens):"");
+      r.onclick=()=>openItem(it); });
+    $("#logcount").textContent=n+" записей"+(n>3000?" (показаны первые 3000)":""); }
+  $("#q").oninput=render; fa.onchange=render; fk.onchange=render; render();
+})();
+
+/* ---------- drawer ---------- */
+function openDrawer(title, kv, pre){ $("#dr-title").textContent=title; const b=$("#dr-body"); b.innerHTML="";
+  const g=H("div",{class:"kv"},b); kv.filter(x=>x[1]!=null&&x[1]!=="").forEach(([k,v])=>{ H("div",{},g,k); const d=H("div",{},g); if(v instanceof Node) d.appendChild(v); else d.textContent=v; });
+  (pre||[]).filter(x=>x&&x[1]).forEach(([h,t])=>{ H("h2",{style:"margin-top:14px"},b,h); H("pre",{},b,t); });
+  $("#drawer").classList.add("open"); }
+$("#dr-close").onclick=()=>$("#drawer").classList.remove("open");
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") $("#drawer").classList.remove("open"); });
+function openItem(it){ setCursor(it.t); if(it.step) setFocus(it.step);
+  openDrawer(kindOf(it.kind)[1]+(it.id?" · "+it.id:""), [["время","T+"+rel(it.t)+"  ("+abs(it.t)+")"],["агент",it.agent||it.by],["кому",it.to],["шаг",it.step],["токены",it.tokens?tok(it.tokens):null],["стоимость",it.cost?money(it.cost):null],["статус",it.status],["ссылки",(it.refs||[]).join(", ")],["теги",(it.tags||[]).join(", ")],["заголовок",it.title]],
+    [["Подробности",it.detail||it.summary||it.evidence||it.note]]); }
+function openNode(n){ const evs=M.items.filter(i=>i.step===n.id);
+  openDrawer("Узел DAG · "+n.id, [["статус",(STATUS[n.removed?"removed":n.status]||[0,n.status])[1]],["исполнитель",n.assignee],["зависимости",n.deps.join(", ")||"—"],["добавлен","T+"+rel(n.added)+" ("+(n.added_by||"?")+")"],["попыток",String(n.attempts)],["запуски",n.runs.map(r=>`T+${rel(r[0])}–${rel(r[1])} ${r[2]||""}`).join("; ")],["причина",n.reason]],
+    [["Цель",n.objective],["Инструкция",n.detail],["История узла",n.history.map(o=>`T+${rel(o.t)} [${o.by||"?"}] ${opLabel(o)}`).join("\n")],["События шага ("+evs.length+")",evs.map(i=>`T+${rel(i.t)} [${i.agent||""}] ${kindOf(i.kind)[1]}: ${i.title}`).join("\n")]]); }
+function openAgent(a){ openDrawer("Агент · "+a.id, [["роль",(ROLE[a.role]||ROLE.other)[1]],["модель",a.model],["родитель",a.parent],["описание",a.label],["активен",dur(a.spans.reduce((s,x)=>s+x[1]-x[0],0))],["шаги",(a.steps||[]).join(", ")],["токены",`${tok(a.tokens)} (in ${tok(a.input)}, out ${tok(a.output)}, cache ${tok(a.cache_read)})`],["стоимость",money(a.cost)],["событий",String(a.events)],["активность",a.spans.map(s=>`T+${rel(s[0])}–${rel(s[1])} ${s[2]}`).join("; ")]]); }
+function openIncident(i){ openDrawer("Инцидент · "+i.id, [["severity",i.severity],["категория",i.category],["статус",i.status],["создан","T+"+rel(i.created)],["решён",i.resolved?"T+"+rel(i.resolved):null],["обойдён",i.mitigated?"T+"+rel(i.mitigated):null],["агент",i.agent],["шаг",i.step],["заголовок",i.title]],
+  [["Описание",i.detail],["Влияние",i.impact],["Обход",i.workaround],["История",i.history.map(h=>`T+${rel(h.t)} ${h.op||""} ${h.status} ${h.note||""}`).join("\n")]]); }
+function openHyp(h){ openDrawer("Гипотеза · "+h.id, [["статус",h.status],["агент",h.agent],["шаг",h.step],["создана","T+"+rel(h.created)]], [["Утверждение",h.claim],["История",h.history.map(x=>`T+${rel(x.t)} ${x.status}${x.agent?" ("+x.agent+")":""}${x.evidence?": "+x.evidence:""}`).join("\n")]]); }
+
+/* ---------- zoom / theme ---------- */
+function setZoom(z, anchorX){ const sc=$("#tl-scroll"); const old=W; const frac = anchorX!=null? (sc.scrollLeft+anchorX)/old : (sc.scrollLeft+sc.clientWidth/2)/old;
+  zoom=Math.max(1,Math.min(60,z)); drawTimeline(); sc.scrollLeft = frac*W - (anchorX!=null?anchorX:sc.clientWidth/2); }
+$("#zin").onclick=()=>setZoom(zoom*1.6); $("#zout").onclick=()=>setZoom(zoom/1.6); $("#zfit").onclick=()=>setZoom(1);
+$("#tl-scroll").addEventListener("wheel",e=>{ if(!e.ctrlKey) return; e.preventDefault(); const r=$("#tl-scroll").getBoundingClientRect(); setZoom(zoom*(e.deltaY<0?1.25:0.8), e.clientX-r.left); },{passive:false});
+$("#links").onclick=()=>{ showLinks=!showLinks; $("#links").classList.toggle("on",showLinks); drawTimeline(); };
+$("#theme").onclick=()=>{ const r=document.documentElement; const dark = r.dataset.theme? r.dataset.theme==="dark" : matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme = dark? "light":"dark"; try{localStorage.setItem("tl-theme",r.dataset.theme);}catch(e){} };
+try{ const th=localStorage.getItem("tl-theme"); if(th) document.documentElement.dataset.theme=th; }catch(e){}
+let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(drawTimeline,120); });
+
+drawTimeline(); setCursor(t1);
+})();
+</script>
+</body>
+</html>

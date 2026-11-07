@@ -1,0 +1,58 @@
+{"type": "session", "t": 1793948400.0, "id": "s0", "title": "Demo / pwn / heap-notes", "task": "heap-notes", "goal": "Получить флаг ctfcup{...} с удалённого сервиса heap-notes", "meta": {"model": "zai/glm-5.3", "harness": "inslopnia", "config": "P+E+R"}}
+{"type": "agent", "t": 1793948400.0, "id": "a1", "agent": "P", "role": "P", "model": "zai/glm-5.3", "label": "планировщик", "state": "start"}
+{"type": "phase", "t": 1793948400.0, "id": "p1", "op": "begin", "name": "recon"}
+{"type": "event", "t": 1793948440.0, "id": "e1", "agent": "P", "kind": "observation", "title": "Прочитал условие и бинарь, checksec: NX, PIE, Full RELRO", "tokens": 18000.0}
+{"type": "hyp", "t": 1793948490.0, "id": "y1", "op": "add", "hid": "H1", "claim": "UAF в delete_note: указатель не обнуляется", "agent": "P", "status": "open"}
+{"type": "hyp", "t": 1793948500.0, "id": "y2", "op": "add", "hid": "H2", "claim": "format string в edit_title", "agent": "P", "status": "open"}
+{"type": "dag", "t": 1793948520.0, "id": "d1", "op": "add", "node": "recon", "by": "P", "objective": "Разведка: собрать бинарь, libc, прогнать базовые сценарии", "assignee": "E:recon"}
+{"type": "dag", "t": 1793948520.0, "id": "d2", "op": "add", "node": "research", "by": "P", "objective": "Найти технику tcache poisoning для glibc 2.39 (safe-linking)", "assignee": "R:research"}
+{"type": "dag", "t": 1793948520.0, "id": "d3", "op": "add", "node": "exploit", "by": "P", "objective": "Эксплойт UAF → tcache poisoning → __free_hook/ROP", "assignee": "E:exploit", "deps": ["recon", "research"]}
+{"type": "agent", "t": 1793948520.0, "id": "a2", "agent": "E:recon", "role": "E", "model": "zai/glm-5.3", "parent": "P", "label": "разведка"}
+{"type": "agent", "t": 1793948520.0, "id": "a3", "agent": "R:research", "role": "R", "model": "zai/glm-5.3", "parent": "P", "label": "исследователь"}
+{"type": "dag", "t": 1793948540.0, "id": "d4", "op": "status", "node": "recon", "by": "P", "status": "running"}
+{"type": "dag", "t": 1793948545.0, "id": "d5", "op": "status", "node": "research", "by": "P", "status": "running"}
+{"type": "event", "t": 1793948640.0, "id": "e2", "agent": "E:recon", "kind": "action", "title": "Запустил бинарь локально в docker с той же libc", "step": "recon", "tokens": 32000.0}
+{"type": "event", "t": 1793948940.0, "id": "e3", "agent": "E:recon", "kind": "milestone", "title": "delete_note не зануляет указатель — UAF подтверждён", "detail": "free(notes[i]) без notes[i]=NULL; повторный show печатает fd-указатель tcache", "step": "recon", "to": "P", "tokens": 41000.0}
+{"type": "hyp", "t": 1793948950.0, "id": "y3", "op": "set", "hid": "H1", "status": "confirmed", "evidence": "show() после delete печатает tcache fd", "agent": "E:recon"}
+{"type": "event", "t": 1793949000.0, "id": "e4", "agent": "E:recon", "kind": "observation", "title": "edit_title использует snprintf с фиксированным форматом", "step": "recon", "tokens": 12000.0}
+{"type": "hyp", "t": 1793949030.0, "id": "y4", "op": "set", "hid": "H2", "status": "refuted", "evidence": "формат строки фиксированный", "agent": "E:recon"}
+{"type": "dag", "t": 1793949060.0, "id": "d6", "op": "status", "node": "recon", "by": "runtime", "status": "done"}
+{"type": "usage", "t": 1793949060.0, "id": "u1", "agent": "E:recon", "total": 140000.0, "input": 120000.0, "output": 20000.0, "cost": 0.21, "cumulative": true}
+{"type": "incident", "t": 1793949065.0, "id": "i1", "op": "add", "iid": "I1", "title": "E:recon: pi потерял stdout финального события, шаг почти помечен failed", "severity": "high", "category": "harness", "agent": "E:recon", "step": "recon", "detail": "run_streaming на Windows дропнул последнее событие; спас TASK_COMPLETE из pi-sessions", "impact": "ложный провал шага", "workaround": "читать pi-sessions вместо stdout", "status": "open"}
+{"type": "phase", "t": 1793949090.0, "id": "p2", "op": "end", "name": "recon"}
+{"type": "phase", "t": 1793949090.0, "id": "p3", "op": "begin", "name": "exploit"}
+{"type": "event", "t": 1793949180.0, "id": "e5", "agent": "R:research", "kind": "result", "title": "Нашёл writeup: safe-linking обходится утечкой heap base через UAF", "step": "research", "to": "P", "tokens": 54000.0}
+{"type": "dag", "t": 1793949210.0, "id": "d7", "op": "status", "node": "research", "by": "runtime", "status": "done"}
+{"type": "usage", "t": 1793949210.0, "id": "u2", "agent": "R:research", "total": 90000.0, "cost": 0.12, "cumulative": true}
+{"type": "event", "t": 1793949240.0, "id": "e6", "agent": "P", "kind": "decision", "title": "Решение: вместо __free_hook (удалён в 2.34+) — FSOP через _IO_list_all", "tokens": 9000.0}
+{"type": "dag", "t": 1793949250.0, "id": "d8", "op": "update", "node": "exploit", "by": "P", "note": "цель поменялась: нет __free_hook", "objective": "Эксплойт UAF → leak heap/libc → tcache poisoning → FSOP"}
+{"type": "dag", "t": 1793949260.0, "id": "d9", "op": "add", "node": "leak", "by": "P", "objective": "Стабильная утечка heap base и libc", "assignee": "E:leak"}
+{"type": "dag", "t": 1793949265.0, "id": "d10", "op": "dep_add", "node": "exploit", "by": "P", "deps": ["leak"]}
+{"type": "agent", "t": 1793949260.0, "id": "a4", "agent": "E:leak", "role": "E", "model": "zai/glm-5.3", "parent": "P"}
+{"type": "dag", "t": 1793949280.0, "id": "d11", "op": "status", "node": "leak", "by": "P", "status": "running"}
+{"type": "event", "t": 1793949540.0, "id": "e7", "agent": "E:leak", "kind": "milestone", "title": "heap base утёк через show() освобождённого чанка", "step": "leak", "to": "P", "tokens": 60000.0}
+{"type": "event", "t": 1793949720.0, "id": "e8", "agent": "E:leak", "kind": "milestone", "title": "libc leak через unsorted bin", "step": "leak", "tokens": 45000.0}
+{"type": "dag", "t": 1793949780.0, "id": "d12", "op": "status", "node": "leak", "by": "runtime", "status": "done"}
+{"type": "usage", "t": 1793949780.0, "id": "u3", "agent": "E:leak", "total": 160000.0, "cost": 0.24, "cumulative": true}
+{"type": "dag", "t": 1793949800.0, "id": "d13", "op": "status", "node": "exploit", "by": "P", "status": "running"}
+{"type": "agent", "t": 1793949800.0, "id": "a5", "agent": "E:exploit", "role": "E", "model": "zai/glm-5.3", "parent": "P"}
+{"type": "event", "t": 1793950020.0, "id": "e9", "agent": "E:exploit", "kind": "action", "title": "Пишу FSOP-цепочку (house of apple 2)", "step": "exploit", "tokens": 70000.0}
+{"type": "event", "t": 1793950380.0, "id": "e10", "agent": "E:exploit", "kind": "milestone", "title": "Локально получил шелл", "step": "exploit", "to": "P", "tokens": 50000.0}
+{"type": "event", "t": 1793950560.0, "id": "e11", "agent": "E:exploit", "kind": "error", "title": "Удалённо: EOF после 3-го запроса — таймаут сервиса", "step": "exploit", "tokens": 20000.0}
+{"type": "incident", "t": 1793950570.0, "id": "i2", "op": "add", "iid": "I2", "title": "Удалённый сервис рвёт соединение через 5 c", "severity": "medium", "category": "env", "agent": "E:exploit", "step": "exploit", "status": "open"}
+{"type": "dag", "t": 1793950620.0, "id": "d14", "op": "status", "node": "exploit", "by": "runtime", "reason": "timeout на удалённом сервисе", "status": "failed"}
+{"type": "event", "t": 1793950650.0, "id": "e12", "agent": "P", "kind": "message", "title": "Steer: ускорить эксплойт, отправлять всё одним sendline-пакетом", "step": "exploit", "to": "E:exploit", "tokens": 6000.0}
+{"type": "incident", "t": 1793950660.0, "id": "i3", "op": "update", "iid": "I2", "note": "P рекомендовал батчинг запросов", "status": "investigating"}
+{"type": "dag", "t": 1793950680.0, "id": "d15", "op": "status", "node": "exploit", "by": "P", "reason": "attempt 2", "status": "running"}
+{"type": "event", "t": 1793950980.0, "id": "e13", "agent": "E:exploit", "kind": "milestone", "title": "Батчинг сработал, шелл на удалённом", "step": "exploit", "to": "P", "tokens": 40000.0}
+{"type": "incident", "t": 1793950990.0, "id": "i4", "op": "resolve", "iid": "I2", "note": "батчинг payload'ов уложился в 5 c"}
+{"type": "flag", "t": 1793951040.0, "id": "f1", "value": "ctfcup{fake_test_flag}", "status": "rejected", "agent": "E:exploit", "note": "прочитал /flag.bak — приманка"}
+{"type": "flag", "t": 1793951100.0, "id": "f2", "value": "ctfcup{h0us3_0f_4ppl3_2_w1th_s4f3_l1nk1ng}", "status": "accepted", "agent": "E:exploit"}
+{"type": "dag", "t": 1793951130.0, "id": "d16", "op": "status", "node": "exploit", "by": "runtime", "status": "done"}
+{"type": "usage", "t": 1793951130.0, "id": "u4", "agent": "E:exploit", "total": 230000.0, "cost": 0.36, "cumulative": true}
+{"type": "dag", "t": 1793951160.0, "id": "d17", "op": "add", "node": "cleanup", "by": "P", "objective": "Удалить временные контейнеры"}
+{"type": "dag", "t": 1793951190.0, "id": "d18", "op": "remove", "node": "cleanup", "by": "P", "reason": "не нужно: прогон завершается"}
+{"type": "phase", "t": 1793951220.0, "id": "p4", "op": "end", "name": "exploit"}
+{"type": "usage", "t": 1793951220.0, "id": "u5", "agent": "P", "total": 95000.0, "input": 80000.0, "output": 15000.0, "cost": 0.14}
+{"type": "outcome", "t": 1793951230.0, "id": "o1", "status": "solved", "summary": "UAF → leak → tcache poisoning → FSOP; удалённо — батчинг из-за таймаута", "flag": "ctfcup{h0us3_0f_4ppl3_2_w1th_s4f3_l1nk1ng}", "by": "P"}
+{"type": "agent", "t": 1793951240.0, "id": "a6", "agent": "P", "state": "stop", "status": "done"}
