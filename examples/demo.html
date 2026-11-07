@@ -36,7 +36,6 @@
   --page: #f4efe6;
   --glow-1: rgba(255, 168, 46, .22);
   --glow-2: rgba(120, 104, 230, .10);
-  --stars: transparent;
   --surface: #fffcf6;
   --surface-2: #f3ece0;
   --surface-3: #e8dfcf;
@@ -74,7 +73,6 @@
     --page: #080b12;
     --glow-1: rgba(255, 158, 31, .13);
     --glow-2: rgba(96, 86, 230, .16);
-    --stars: rgba(255, 255, 255, .55);
     --surface: #10141d;
     --surface-2: #171c27;
     --surface-3: #1f2532;
@@ -105,7 +103,6 @@
   --page: #080b12;
   --glow-1: rgba(255, 158, 31, .13);
   --glow-2: rgba(96, 86, 230, .16);
-  --stars: rgba(255, 255, 255, .55);
   --surface: #10141d;
   --surface-2: #171c27;
   --surface-3: #1f2532;
@@ -145,26 +142,6 @@ body {
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
-/* starfield (night only — transparent in dawn) + film grain */
-body::before {
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    radial-gradient(1px 1px at 12% 18%, var(--stars), transparent 60%),
-    radial-gradient(1px 1px at 27% 72%, var(--stars), transparent 60%),
-    radial-gradient(1.4px 1.4px at 46% 12%, var(--stars), transparent 60%),
-    radial-gradient(1px 1px at 63% 44%, var(--stars), transparent 60%),
-    radial-gradient(1.2px 1.2px at 78% 22%, var(--stars), transparent 60%),
-    radial-gradient(1px 1px at 88% 66%, var(--stars), transparent 60%),
-    radial-gradient(1px 1px at 35% 38%, var(--stars), transparent 60%),
-    radial-gradient(1.3px 1.3px at 92% 8%, var(--stars), transparent 60%),
-    radial-gradient(1px 1px at 6% 52%, var(--stars), transparent 60%),
-    radial-gradient(1px 1px at 55% 88%, var(--stars), transparent 60%);
-  opacity: .5;
-}
-body::after {
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .045; mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-}
 body > * { position: relative; z-index: 1; }
 ::selection { background: var(--accent); color: var(--accent-ink); }
 a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
@@ -177,7 +154,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .muted { color: var(--muted); }
 .sub { color: var(--ink-2); font-size: 13px; }
 
-/* eyebrow: section numbering «01 — ТАЙМЛАЙН» */
+/* eyebrow: small caps label above a heading */
 .eyebrow {
   font-family: var(--font-display); font-size: 12px; font-weight: 600; letter-spacing: .16em;
   text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 10px;
@@ -189,10 +166,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .section-title .note { color: var(--muted); font-size: 12.5px; }
 
 /* =============================== components =============================== */
-.card {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, var(--accent) 4%), var(--surface) 120px);
-  border: 1px solid var(--ring); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px;
-}
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 20px; }
 .glass { background: var(--glass); backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3); }
 
 button, select, input, textarea {
@@ -204,7 +178,7 @@ textarea { border-radius: var(--radius-md); }
 button { cursor: pointer; }
 button:hover { background: var(--hl); border-color: color-mix(in srgb, var(--accent) 35%, var(--ring)); }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-button.on, button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; box-shadow: var(--sun-glow); }
+button.on, button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 button.icon { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; }
 
 .chip {
@@ -219,7 +193,7 @@ button.icon { width: 34px; height: 34px; padding: 0; display: inline-grid; place
 
 /* brand lockup */
 .brand { display: flex; align-items: center; gap: 12px; }
-.brand-mark { width: 72px; height: 40px; flex: none; overflow: visible; filter: drop-shadow(0 0 10px rgba(255, 166, 31, .35)); }
+.brand-mark { width: 72px; height: 40px; flex: none; overflow: visible; }
 .brand-word {
   font-family: var(--font-display); font-stretch: condensed; font-style: italic; font-weight: 300;
   font-size: 28px; letter-spacing: .05em; line-height: 1; color: var(--ink);
@@ -239,13 +213,11 @@ button.icon { width: 34px; height: 34px; padding: 0; display: inline-grid; place
 .kpi .v small { font-size: 16px; color: var(--muted); font-weight: 400; }
 .kpi .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .kpi .viz { margin-top: 8px; display: block; width: 100%; height: 26px; }
-.kpi.accent { background: linear-gradient(135deg, var(--accent-soft), var(--surface-2) 70%); }
 
 /* verdict stamp */
 .stamp {
-  font-family: var(--font-display); text-transform: uppercase; letter-spacing: .14em; font-weight: 700; font-size: 15px;
-  padding: 10px 18px 9px; border: 2px solid currentColor; border-radius: 10px; transform: rotate(-3deg);
-  box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px currentColor; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center;
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; font-size: 13px;
+  padding: 6px 14px; border: 1.5px solid currentColor; border-radius: 999px; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center;
   background: color-mix(in srgb, currentColor 9%, transparent);
 }
 .stamp.solved { color: var(--good); } .stamp.unsolved { color: var(--critical); } .stamp.partial { color: var(--warning); }
@@ -289,19 +261,13 @@ pre, code { font-family: var(--font-mono); }
 section { margin-top: 22px; scroll-margin-top: 84px; }
 
 /* hero */
-.hero { padding: 22px 26px 22px; position: relative; overflow: hidden; }
-.hero::before {
-  content: ""; position: absolute; inset: -40% auto auto -10%; width: 620px; height: 420px; pointer-events: none;
-  background: radial-gradient(closest-side, var(--accent-soft), transparent); filter: blur(10px);
-}
-.hero > * { position: relative; }
+.hero { padding: 20px 24px; }
 .hero-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.hero-main { display: flex; justify-content: space-between; align-items: center; gap: 28px; margin-top: 26px; flex-wrap: wrap; }
+.hero-main { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-top: 18px; flex-wrap: wrap; }
 .hero-text { min-width: 0; flex: 1 1 520px; }
-.hero h1 { font-size: clamp(28px, 3.6vw, 46px); line-height: 1.05; margin-top: 8px; letter-spacing: -.005em; }
-.hero .when { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.hero .when .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--axis); }
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 10px; margin-top: 24px; }
+.hero h1 { font-size: clamp(26px, 3vw, 38px); line-height: 1.1; letter-spacing: -.005em; }
+.hero .meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 6px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 18px; }
 .hero-foot { display: grid; grid-template-columns: minmax(0, auto) 1fr; gap: 12px; margin-top: 14px; align-items: start; }
 .flagbox {
   font-family: var(--font-mono); font-size: 13px; padding: 10px 14px; border-radius: var(--radius-md); word-break: break-all;
@@ -317,25 +283,20 @@ section { margin-top: 22px; scroll-margin-top: 84px; }
 .summary.open { max-height: none; -webkit-mask-image: none; mask-image: none; }
 @media (max-width: 800px) { .hero-foot { grid-template-columns: 1fr; } }
 /* embedded in the Explorer: the host app already shows brand + theme switch */
-.embed .hero-top { display: none; }
-.embed .hero-main { margin-top: 0; }
+.embed .hero-top, .embed .hero-main { display: none; }
+.embed .kpis { margin-top: 0; }
 .embed .wrap { padding-top: 16px; }
 
-/* floating control dock */
-.toolbar {
-  position: sticky; top: 12px; z-index: 20; margin: 22px auto 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-  padding: 7px 8px 7px 18px; border: 1px solid var(--ring); border-radius: 999px; box-shadow: var(--shadow-lg); width: fit-content; max-width: 100%;
-}
-.toolbar .ttl { font-family: var(--font-display); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
-.toolbar .sep { width: 1px; height: 22px; background: var(--axis); margin: 0 4px; }
+.section-title .sp { flex: 1; }
+.tools { display: flex; gap: 6px; align-items: center; }
+.tools button { padding: 4px 11px; }
+.tools button.icon { width: 30px; height: 30px; }
 .tnow { font-family: var(--font-mono); font-weight: 600; color: var(--accent); min-width: 78px; font-variant-numeric: tabular-nums; }
 
-/* legends */
-.legend { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); margin: 6px 0 12px; align-items: center; }
+/* event-kind filter + the few line/marker meanings */
+.kinds { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.legend { display: inline-flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-left: auto; align-items: center; order: 99; }
 .legend span { display: inline-flex; gap: 6px; align-items: center; }
-.kinds { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
-.hint { color: var(--muted); font-size: 12px; margin-top: 10px; display: flex; gap: 14px; flex-wrap: wrap; }
-.hint kbd { font-family: var(--font-mono); font-size: 11px; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--axis); background: var(--surface-2); }
 
 /* timeline */
 .tl { display: grid; grid-template-columns: 252px 1fr; border: 1px solid var(--ring); border-radius: var(--radius-md); overflow: hidden; background: var(--surface); }
@@ -352,17 +313,16 @@ section { margin-top: 22px; scroll-margin-top: 84px; }
 svg text { font-family: var(--font-ui); }
 .ax text { font-size: 11px; fill: var(--muted); font-family: var(--font-mono); }
 .mk { cursor: pointer; }
-.mk:hover { filter: brightness(1.18) drop-shadow(0 0 4px var(--accent-soft)); }
+.mk:hover { filter: brightness(1.15); }
 .dim { opacity: .12; }
-#cur { stroke: var(--accent); filter: drop-shadow(0 0 3px var(--accent)); }
+#cur { stroke: var(--accent); }
 #curh { fill: var(--accent); }
 
 /* DAG */
 .dag-grid { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 14px; align-items: start; }
 .dag-box {
   border: 1px solid var(--ring); border-radius: var(--radius-md); overflow: auto; min-height: 280px; max-height: 660px; position: relative;
-  background-color: var(--surface);
-  background-image: radial-gradient(circle at 1px 1px, var(--grid) 1px, transparent 0); background-size: 18px 18px;
+  background: var(--surface);
 }
 .revs { border: 1px solid var(--ring); border-radius: var(--radius-md); background: var(--surface); overflow: auto; max-height: 560px; }
 .rev { display: grid; grid-template-columns: 64px 20px 1fr; gap: 6px; padding: 7px 12px; border-bottom: 1px solid var(--grid); font-size: 12px; cursor: pointer; align-items: start; transition: background .12s; }
@@ -376,19 +336,19 @@ svg text { font-family: var(--font-ui); }
 .node { cursor: pointer; }
 .node text { font-size: 11px; fill: var(--ink-2); }
 .node .nid { font-size: 12.5px; font-weight: 650; fill: var(--ink); font-family: var(--font-display); letter-spacing: .02em; }
-@keyframes pulse { 0% { stroke-opacity: .95; } 100% { stroke-opacity: .15; } }
-.changed { animation: pulse 1.1s ease-in-out infinite alternate; }
+.changed { stroke-opacity: .7; }
 
 /* incidents & hypotheses */
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .inc {
   border: 1px solid var(--ring); border-radius: var(--radius-md); padding: 12px 14px 12px 16px; margin-bottom: 10px; cursor: pointer;
-  background: var(--surface); position: relative; overflow: hidden; transition: transform .15s, box-shadow .15s;
+  background: var(--surface); position: relative; overflow: hidden; transition: background .12s;
 }
 .inc::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--sevc, var(--critical)); }
-.inc:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.inc:hover { background: var(--hl); }
 .inc .tt { font-weight: 650; margin-top: 6px; }
-.inc .d { white-space: pre-wrap; color: var(--ink-2); font-size: 12.5px; margin-top: 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; }
+.inc .d { color: var(--ink-2); font-size: 12.5px; margin-top: 3px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.row-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; }
 .sev { font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; color: #fff; }
 .sev.low { background: var(--neutral); color: var(--ink); } .sev.medium { background: var(--warning); color: #1d1200; }
 .sev.high { background: var(--serious); color: #1d1200; } .sev.critical { background: var(--critical); }
@@ -397,7 +357,6 @@ svg text { font-family: var(--font-ui); }
 .hyp:hover { background: var(--hl); }
 .hyp.refuted .claim { text-decoration: line-through; color: var(--muted); }
 .hyp .claim { margin-top: 4px; }
-h3.mini { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 22px 0 8px; }
 
 /* log */
 .logwrap { max-height: 580px; overflow: auto; border: 1px solid var(--ring); border-radius: var(--radius-md); background: var(--surface); }
@@ -424,14 +383,13 @@ h3.mini { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; col
 <div class="wrap">
   <header class="card hero">
     <div class="hero-top">
-      <div class="brand"><svg class="brand-mark" viewBox="-8 -2 136 76" aria-hidden="true"><defs><radialGradient id="lg-glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffb02e" stop-opacity=".75"/><stop offset=".45" stop-color="#ffa51f" stop-opacity=".35"/><stop offset="1" stop-color="#ff9a00" stop-opacity="0"/></radialGradient></defs><ellipse cx="60" cy="36" rx="34" ry="24" fill="url(#lg-glow)"/><polygon points="60.00,15.50 57.87,22.57 62.13,22.57" fill="#f9a61a"/><polygon points="70.25,18.25 64.87,23.30 68.56,25.43" fill="#f9a61a"/><polygon points="77.75,25.75 70.57,27.44 72.70,31.13" fill="#f9a61a"/><polygon points="80.50,36.00 73.43,33.87 73.43,38.13" fill="#f9a61a"/><polygon points="77.75,46.25 72.70,40.87 70.57,44.56" fill="#f9a61a"/><polygon points="70.25,53.75 68.56,46.57 64.87,48.70" fill="#f9a61a"/><polygon points="60.00,56.50 62.13,49.43 57.87,49.43" fill="#f9a61a"/><polygon points="49.75,53.75 55.13,48.70 51.44,46.57" fill="#f9a61a"/><polygon points="42.25,46.25 49.43,44.56 47.30,40.87" fill="#f9a61a"/><polygon points="39.50,36.00 46.57,38.13 46.57,33.87" fill="#f9a61a"/><polygon points="42.25,25.75 47.30,31.13 49.43,27.44" fill="#f9a61a"/><polygon points="49.75,18.25 51.44,25.43 55.13,23.30" fill="#f9a61a"/><circle cx="60" cy="36" r="12.6" fill="#ffd27a"/><circle cx="60" cy="36" r="11.4" fill="#f7a01b"/><path d="M55,31L65,41M65,31L55,41" stroke="#141414" stroke-width="3.6"/><path d="M5,36Q60,-18 115,36Q60,90 5,36Z" fill="none" stroke="var(--ink)" stroke-width="7" stroke-linejoin="miter"/></svg><span class="brand-word">inslopnia</span><span class="brand-sub">session timeline</span></div>
+      <div class="brand"><svg class="brand-mark" viewBox="-8 -2 136 76" aria-hidden="true"><defs><radialGradient id="lg-glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffb02e" stop-opacity=".75"/><stop offset=".45" stop-color="#ffa51f" stop-opacity=".35"/><stop offset="1" stop-color="#ff9a00" stop-opacity="0"/></radialGradient></defs><ellipse cx="60" cy="36" rx="34" ry="24" fill="url(#lg-glow)"/><polygon points="60.00,15.50 57.87,22.57 62.13,22.57" fill="#f9a61a"/><polygon points="70.25,18.25 64.87,23.30 68.56,25.43" fill="#f9a61a"/><polygon points="77.75,25.75 70.57,27.44 72.70,31.13" fill="#f9a61a"/><polygon points="80.50,36.00 73.43,33.87 73.43,38.13" fill="#f9a61a"/><polygon points="77.75,46.25 72.70,40.87 70.57,44.56" fill="#f9a61a"/><polygon points="70.25,53.75 68.56,46.57 64.87,48.70" fill="#f9a61a"/><polygon points="60.00,56.50 62.13,49.43 57.87,49.43" fill="#f9a61a"/><polygon points="49.75,53.75 55.13,48.70 51.44,46.57" fill="#f9a61a"/><polygon points="42.25,46.25 49.43,44.56 47.30,40.87" fill="#f9a61a"/><polygon points="39.50,36.00 46.57,38.13 46.57,33.87" fill="#f9a61a"/><polygon points="42.25,25.75 47.30,31.13 49.43,27.44" fill="#f9a61a"/><polygon points="49.75,18.25 51.44,25.43 55.13,23.30" fill="#f9a61a"/><circle cx="60" cy="36" r="12.6" fill="#ffd27a"/><circle cx="60" cy="36" r="11.4" fill="#f7a01b"/><path d="M55,31L65,41M65,31L55,41" stroke="#141414" stroke-width="3.6"/><path d="M5,36Q60,-18 115,36Q60,90 5,36Z" fill="none" stroke="var(--ink)" stroke-width="7" stroke-linejoin="miter"/></svg><span class="brand-word">inslopnia</span></div>
       <button id="theme" class="icon" title="Сменить тему (ночь / рассвет)">◐</button>
     </div>
     <div class="hero-main">
       <div class="hero-text">
-        <div class="eyebrow plain" id="h-task"></div>
         <h1 id="h-title"></h1>
-        <div class="when" id="h-window"></div>
+        <div class="meta" id="h-meta"></div>
       </div>
       <span id="h-verdict" class="stamp"></span>
     </div>
@@ -439,37 +397,26 @@ h3.mini { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; col
     <div class="hero-foot"><div id="h-flag"></div><div class="summary" id="h-summary" title="клик — развернуть"></div></div>
   </header>
 
-  <div class="toolbar glass">
-    <span class="ttl">Навигация</span>
-    <button id="zout" class="icon" title="Уменьшить (Ctrl+колесо)">−</button>
-    <button id="zfit">Fit</button>
-    <button id="zin" class="icon" title="Увеличить (Ctrl+колесо)">+</button>
-    <span class="sep"></span>
-    <span class="muted" style="font-size:12px">курсор</span><span class="tnow" id="tb-now"></span>
-    <span class="sep"></span>
-    <button id="links" class="on" title="Связи оркестрации P→E и сообщения">связи</button>
-    <button id="clearfocus" style="display:none">✕ фокус</button>
-  </div>
-
   <section class="card">
-    <div class="eyebrow">01 — оркестрация во времени</div>
-    <div class="section-title"><h2>Таймлайн агентов</h2><span class="note">дорожки, поручения P→E, токены и прогресс DAG на общей оси</span></div>
-    <div class="kinds"><span class="muted" style="font-size:12px;margin-right:4px">типы событий:</span><span id="kindchips" style="display:contents"></span></div>
-    <div class="legend" id="legend"></div>
+    <div class="section-title"><h2>Таймлайн агентов</h2><span class="sp"></span>
+      <div class="tools">
+        <button id="clearfocus" style="display:none" title="Снять фокус с шага">✕ фокус</button>
+        <button id="links" class="on" title="Связи оркестрации P→E и сообщения">связи</button>
+        <button id="zout" class="icon" title="Уменьшить (Ctrl+колесо)">−</button><button id="zfit" title="Весь прогон">Fit</button><button id="zin" class="icon" title="Увеличить (Ctrl+колесо)">+</button>
+      </div>
+    </div>
+    <div class="kinds" id="kindchips"><span class="legend" id="legend"></span></div>
     <div class="tl"><div class="tl-labels" id="tl-labels"></div><div class="tl-scroll" id="tl-scroll"><svg id="tl"></svg></div></div>
-    <div class="hint"><span>клик по полосе/маркеру — детали и курсор</span><span>клик по агенту или узлу — фокус на шаге</span><span><kbd>Ctrl</kbd>+колесо — масштаб</span><span><kbd>Esc</kbd> — закрыть панель</span></div>
   </section>
 
   <section class="card" id="dag-sec">
-    <div class="eyebrow">02 — план и его ревизии</div>
-    <div class="section-title"><h2>Эволюция DAG</h2><span class="note">состояние графа в момент курсора; ▶ проигрывает историю</span></div>
+    <div class="section-title"><h2>Эволюция DAG</h2></div>
     <div class="scrub">
-      <button id="play" class="primary icon" title="Проиграть">▶</button><button id="prev">◀ ревизия</button><button id="next">ревизия ▶</button>
-      <input type="range" id="slider" min="0" max="1000" value="1000">
+      <button id="play" class="primary icon" title="Проиграть историю ревизий">▶</button><button id="prev" class="icon" title="Предыдущая ревизия">◀</button><button id="next" class="icon" title="Следующая ревизия">▶</button>
+      <input type="range" id="slider" min="0" max="1000" value="1000" title="Момент времени (общий курсор с таймлайном)">
       <span class="tnow" id="sl-now"></span>
       <span class="muted" style="font-size:12px" id="sl-rev"></span>
     </div>
-    <div class="legend" id="dag-legend"></div>
     <div class="dag-grid">
       <div class="dag-box" id="dag-box"><svg id="dag"></svg></div>
       <div class="revs" id="revs"></div>
@@ -478,20 +425,16 @@ h3.mini { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; col
 
   <section class="two">
     <div class="card">
-      <div class="eyebrow">03 — что сломалось</div>
-      <div class="section-title"><h2>Инциденты и баги</h2><span class="note" id="inc-count"></span></div>
+      <div class="section-title"><h2>Инциденты</h2><span class="note" id="inc-count"></span></div>
       <div id="incidents"></div>
     </div>
     <div class="card">
-      <div class="eyebrow">04 — что думали</div>
       <div class="section-title"><h2>Гипотезы</h2><span class="note" id="hyp-count"></span></div>
       <div id="hyps"></div>
-      <h3 class="mini">Агенты</h3><div id="agents-tbl"></div>
     </div>
   </section>
 
   <section class="card">
-    <div class="eyebrow">05 — всё подряд</div>
     <div class="section-title"><h2>Журнал событий</h2><span class="note" id="logcount"></span></div>
     <div class="filters">
       <input type="search" id="q" placeholder="поиск по событиям…">
@@ -536,42 +479,19 @@ const VERD = {solved:"РЕШЕНО ✓",unsolved:"НЕ РЕШЕНО ✗",partial
 /* ---------- header ---------- */
 const ses = M.session, fin = M.final, T = M.totals;
 $("#h-title").textContent = ses.title || "Session";
-$("#h-task").textContent = [ses.task, ses.meta && ses.meta.model, ses.meta && ses.meta.thinking && ("thinking "+ses.meta.thinking)].filter(Boolean).join("  ·  ");
-(function(){ const w=$("#h-window"); const f=t=>new Date(t*1000).toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
-  [f(t0),"→",f(t1)].forEach((x,i)=>{ if(i) H("span",{class:"dot"},w); H("span",{},w,x); }); })();
+(function(){ const f=t=>new Date(t*1000).toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+  $("#h-meta").textContent = [ses.task, ses.meta && ses.meta.model, ses.meta && ses.meta.thinking && ("thinking "+ses.meta.thinking), f(t0)+" → "+f(t1)].filter(Boolean).join("  ·  "); })();
 const vEl = $("#h-verdict"); const vs = fin? fin.status : "none";
 vEl.className = "stamp "+vs; vEl.textContent = fin? (VERD[vs]||vs.toUpperCase()) : "НЕТ ВЕРДИКТА";
 const nodesC = T.nodes||{}; const nTot = Object.values(nodesC).reduce((a,b)=>a+b,0);
 const hypC = {}; M.hyps.forEach(h=>hypC[h.status]=(hypC[h.status]||0)+1);
-const SVGNS="http://www.w3.org/2000/svg";
-const kpi = (l,v,s,viz,cls) => { const d=H("div",{class:"kpi"+(cls?" "+cls:"")},$("#kpis")); H("div",{class:"l"},d,l); const vv=H("div",{class:"v"},d); vv.innerHTML=v; if(s) H("div",{class:"s"},d,s); if(viz) d.appendChild(viz); return d; };
-const vizSvg = () => { const e=document.createElementNS(SVGNS,"svg"); e.setAttribute("class","viz"); e.setAttribute("viewBox","0 0 100 26"); e.setAttribute("preserveAspectRatio","none"); return e; };
-// tokens: cumulative sparkline
-const tokViz=(()=>{ if(!M.usage.length) return null; const u=M.usage.slice().sort((a,b)=>a.t-b.t); let c=0; const pts=[[0,26]];
-  u.forEach(x=>{ c+=x.tokens||0; pts.push([100*(x.t-t0)/SPAN, 26-24*c/Math.max(1,T.tokens)]); }); pts.push([100,pts[pts.length-1][1]]);
-  const e=vizSvg(); const id="tg"+Math.random().toString(36).slice(2,7);
-  e.innerHTML=`<defs><linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".45"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>`+
-    `<path d="M${pts.map(p=>p.join(",")).join("L")}L100,26Z" fill="url(#${id})"/><path d="M${pts.slice(1).map(p=>p.join(",")).join("L")}" fill="none" stroke="var(--accent)" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`; return e; })();
-// dag: status bar
-const dagViz=(()=>{ if(!nTot) return null; const e=vizSvg(); let x=0; ["done","running","blocked","pending","failed","cancelled","removed"].forEach(k=>{ const n=nodesC[k]||0; if(!n) return;
-  const w=100*n/nTot; const r=document.createElementNS(SVGNS,"rect"); r.setAttribute("x",x); r.setAttribute("y",9); r.setAttribute("width",Math.max(w-1,.5)); r.setAttribute("height",8); r.setAttribute("rx",2);
-  r.setAttribute("fill",(STATUS[k]||STATUS.pending)[0]); e.appendChild(r); x+=w; }); return e; })();
-// incidents: severity dots
-const incViz=(()=>{ if(!M.incidents.length) return null; const e=vizSvg(); e.setAttribute("viewBox",`0 0 ${Math.max(100,M.incidents.length*11)} 26`); e.setAttribute("preserveAspectRatio","xMinYMid meet");
-  const SC={low:"var(--neutral)",medium:"var(--warning)",high:"var(--serious)",critical:"var(--critical)"};
-  M.incidents.slice().sort((a,b)=>a.created-b.created).forEach((i,k)=>{ const c=document.createElementNS(SVGNS,"circle"); c.setAttribute("cx",5+k*11); c.setAttribute("cy",13); c.setAttribute("r",4.2);
-    const open=i.status==="open"||i.status==="investigating"; c.setAttribute("fill",open?SC[i.severity]||SC.medium:"none"); c.setAttribute("stroke",SC[i.severity]||SC.medium); c.setAttribute("stroke-width",1.6); e.appendChild(c); }); return e; })();
-// duration: phases strip
-const phViz=(()=>{ if(!M.phases.length) return null; const e=vizSvg(); const cs=["var(--c-blue)","var(--c-orange)","var(--c-aqua)","var(--c-violet)"];
-  M.phases.forEach((p,i)=>{ const r=document.createElementNS(SVGNS,"rect"); r.setAttribute("x",100*(p.start-t0)/SPAN); r.setAttribute("y",9); r.setAttribute("width",Math.max(.8,100*(p.end-p.start)/SPAN-.6)); r.setAttribute("height",8); r.setAttribute("rx",2); r.setAttribute("fill",cs[i%4]); r.setAttribute("opacity",.8); e.appendChild(r); }); return e; })();
+const kpi = (l,v,s,title) => { const d=H("div",{class:"kpi",title:title||null},$("#kpis")); H("div",{class:"l"},d,l); const vv=H("div",{class:"v"},d); vv.innerHTML=v; if(s) H("div",{class:"s"},d,s); return d; };
 const big = (a,b) => `${a}${b!=null?` <small>${b}</small>`:""}`;
-kpi("Длительность", dur(SPAN), M.phases.length? M.phases.map(p=>p.name).join(" → ") : null, phViz);
-kpi("Токены", tok(T.tokens), `in ${tok(T.input)} · out ${tok(T.output)} · cache ${tok(T.cache_read)}`, tokViz, "accent");
-kpi("Стоимость", money(T.cost), M.agents.length? `≈ ${money(T.cost/Math.max(1,SPAN/3600))}/ч` : null);
-kpi("Агенты", String(T.agents), Object.entries(M.agents.reduce((a,x)=>(a[x.role]=(a[x.role]||0)+1,a),{})).map(([r,c])=>`${ROLE_SHORT[r]||r}×${c}`).join(" "));
-kpi("Узлы DAG", nTot? big(nodesC.done||0,"/ "+nTot) : "—", Object.entries(nodesC).filter(([k])=>k!=="done").map(([k,v])=>`${(STATUS[k]||[0,k])[1]} ${v}`).join(" · ") || (nTot? "все готовы":""), dagViz);
-kpi("Инциденты", big(T.incidents_open,"/ "+T.incidents), "открыто / всего", incViz);
-kpi("Гипотезы", String(M.hyps.length), Object.entries(hypC).map(([k,v])=>`${k} ${v}`).join(" · "));
+kpi("Длительность", dur(SPAN), null, M.phases.length? "фазы: "+M.phases.map(p=>p.name).join(" → ") : null);
+kpi("Токены", tok(T.tokens), money(T.cost), `in ${tok(T.input)} · out ${tok(T.output)} · cache ${tok(T.cache_read)}`);
+kpi("Узлы DAG", nTot? big(nodesC.done||0,"/ "+nTot) : "—", ["failed","cancelled","running","blocked"].filter(k=>nodesC[k]).map(k=>`${STATUS[k][1]} ${nodesC[k]}`).join(" · ") || null);
+kpi("Инциденты", big(T.incidents_open,"/ "+T.incidents), T.incidents? "открыто / всего" : null);
+kpi("Гипотезы", M.hyps.length? big(hypC.confirmed||0,"/ "+M.hyps.length) : "0", M.hyps.length? "подтверждено / всего" : null);
 const flagVal = (fin && fin.flag) || (M.flags.filter(f=>f.status==="accepted").slice(-1)[0]||{}).value;
 if(flagVal){ const fb=H("div",{class:"flagbox"},$("#h-flag")); H("b",{},fb,"FLAG"); H("span",{},fb,flagVal); } else { $("#h-flag").remove(); document.querySelector(".hero-foot").style.gridTemplateColumns="1fr"; }
 if(fin && fin.summary){ const s=$("#h-summary"); s.textContent=fin.summary; s.onclick=()=>s.classList.toggle("open"); } else $("#h-summary").remove();
@@ -661,19 +581,19 @@ function drawTimeline(){
   const svg = $("#tl"); svg.innerHTML=""; svg.setAttribute("width",W); svg.setAttribute("height",TOTAL_H);
   // labels column
   const lab = $("#tl-labels"); lab.innerHTML="";
-  const pad = H("div",{},lab); pad.style.height = (lanesTop)+"px"; pad.className="lab group"; pad.style.alignItems="flex-end"; pad.style.paddingBottom="4px"; pad.textContent = PH_H? "фазы / агенты":"агенты";
+  const pad = H("div",{},lab); pad.style.height = (lanesTop)+"px"; pad.className="lab group"; pad.style.alignItems="flex-end"; pad.style.paddingBottom="4px"; pad.textContent = "";
   M.agents.forEach((a,i)=>{
     const d=H("div",{class:"lab"},lab); d.style.height=LANE_H+"px"; if(i%2) d.style.background="var(--lane-alt)";
     const rc=ROLE[a.role]||ROLE.other; const r=H("span",{class:"role"},d,ROLE_SHORT[a.role]||a.role); r.style.background=rc[0];
     const box=H("div",{},d); box.style.minWidth="0";
-    H("div",{class:"nm"},box,a.id.replace(/^[ER]:/,"")); H("div",{class:"meta"},box,[tok(a.tokens)+" tok", a.cost? money(a.cost):null, a.model].filter(Boolean).join(" · "));
-    d.title = `${a.id}\n${a.label||""}\nмодель: ${a.model||"?"}\nтокены: ${tok(a.tokens)}  стоимость: ${money(a.cost)}\nсобытий: ${a.events}`;
+    H("div",{class:"nm"},box,a.id.replace(/^[ER]:/,"")); if(a.tokens) H("div",{class:"meta"},box,[tok(a.tokens)+" tok", a.cost? money(a.cost):null].filter(Boolean).join(" · "));
+    d.title = `${a.id}\n${a.label||""}\nмодель: ${a.model||"?"}\nтокены: ${tok(a.tokens)}  стоимость: ${money(a.cost)}\nактивен: ${dur(a.spans.reduce((s,x)=>s+x[1]-x[0],0))}\nсобытий: ${a.events}`;
     d.onclick = () => { if(a.steps && a.steps.length) setFocus(focusStep===a.steps[0]?null:a.steps[0]); openAgent(a); };
   });
   const lt=H("div",{class:"lab group"},lab); lt.style.height=(tokTop-lanesBottom)+"px"; lt.style.alignItems="flex-end"; lt.textContent="";
-  const l2=H("div",{class:"lab"},lab); l2.style.height=TOK_H+"px"; l2.style.alignItems="flex-start"; l2.innerHTML=`<div><div class="nm">Токены (накопл.)</div><div class="meta">стек по ролям</div></div>`;
+  const l2=H("div",{class:"lab"},lab); l2.style.height=TOK_H+"px"; l2.style.alignItems="flex-start"; l2.innerHTML=`<div class="nm">Токены</div>`; l2.title="накопленные токены, стек по ролям";
   const l3=H("div",{class:"lab"},lab); l3.style.height=(progTop-tokTop-TOK_H)+"px";
-  const l4=H("div",{class:"lab"},lab); l4.style.height=PROG_H+"px"; l4.style.alignItems="flex-start"; l4.innerHTML=`<div><div class="nm">Прогресс DAG</div><div class="meta">узлы по статусам</div></div>`;
+  const l4=H("div",{class:"lab"},lab); l4.style.height=PROG_H+"px"; l4.style.alignItems="flex-start"; l4.innerHTML=`<div class="nm">Прогресс DAG</div>`; l4.title="узлы DAG по статусам";
 
   const gGrid=S("g",{},svg), gPh=S("g",{},svg), gLanes=S("g",{},svg), gLinks=S("g",{},svg), gMk=S("g",{},svg), gCh=S("g",{},svg), gCur=S("g",{},svg);
   // lane backgrounds
@@ -713,10 +633,6 @@ function drawTimeline(){
       g.addEventListener("click",ev=>{ setCursor(tAtX(ev.offsetX)); if(step) setFocus(step); openAgent(a); });
     });
   });
-  // token activity ticks inside lanes (bucketed usage → bar height)
-  (function(){ const maxU=Math.max(1,...M.usage.map(u=>u.tokens||0)); const gA=S("g",{},gLanes);
-    M.usage.forEach(u=>{ if(!(u.agent in laneIdx)||!u.tokens) return; const a=M.agents[laneIdx[u.agent]]; const y=laneY(u.agent); const h=Math.max(1.5,(LANE_H/2-3)*Math.sqrt(u.tokens/maxU));
-      S("rect",{x:X(u.t)-1,y:y+LANE_H/2-2-h,width:2,height:h,fill:(ROLE[a.role]||ROLE.other)[0],opacity:.55,"data-step":(a.steps||[])[0]||""},gA); }); })();
   // orchestration links: dag ops (by -> assignee) and messages (agent -> to)
   if(showLinks){
     const link=(xa,ya,xb,yb,color,dash,meta)=>{ const mid=(ya+yb)/2; const p=S("path",{d:`M${xa},${ya} C${xa+18},${mid} ${xb-18},${mid} ${xb},${yb}`,fill:"none",stroke:color,"stroke-width":1.4,"stroke-opacity":.7,"stroke-dasharray":dash||null,class:"mk","data-step":meta.step||""},gLinks);
@@ -758,7 +674,6 @@ function setCursorFromEvent(e){ const r=$("#tl").getBoundingClientRect(); setCur
 
 function drawTokens(g){
   const y0=tokTop+TOK_H, top=tokTop; const max=Math.max(1, ...tokSeries.map(p=>Object.values(p.v).reduce((a,b)=>a+b,0)));
-  S("text",{x:PADL,y:top-6,"font-size":11,fill:"var(--ink-2)"},g).textContent=`всего ${tok(T.tokens)} · ${money(T.cost)}`;
   [0.5,1].forEach(f=>{ const y=y0-(TOK_H-6)*f; S("line",{x1:PADL,x2:W-PADR,y1:y,y2:y,stroke:"var(--grid)","stroke-dasharray":"2 3"},g); S("text",{x:W-PADR-2,y:y-3,"text-anchor":"end","font-size":10,fill:"var(--muted)"},g).textContent=tok(max*f); });
   S("line",{x1:PADL,x2:W-PADR,y1:y0,y2:y0,stroke:"var(--axis)"},g);
   if(!M.usage.length){ S("text",{x:PADL+8,y:top+TOK_H/2,"font-size":12,fill:"var(--muted)"},g).textContent="нет данных о токенах"; return; }
@@ -814,19 +729,14 @@ function opLabel(o){
 (function(){
   const lg=$("#legend");
   const add=(html)=>{ const s=H("span",{},lg); s.innerHTML=html; };
-  rolesPresent.forEach(r=>add(`<span class="sw" style="background:${(ROLE[r]||ROLE.other)[0]}"></span>${(ROLE[r]||ROLE.other)[1]}`));
-  add(`<span style="color:var(--muted)">│ полосы активности:</span>`);
-  ["running","done","failed","cancelled"].forEach(s=>add(`<span class="sw" style="background:${STATUS[s][0]};opacity:.7"></span>${STATUS[s][1]}`));
-  add(`<span style="color:var(--muted)">│</span><svg width="12" height="12"><rect x="2" y="2" width="8" height="8" transform="rotate(45 6 6)" fill="none" stroke="var(--c-violet)" stroke-width="2"/></svg>правка DAG`);
+  add(`<svg width="12" height="12"><rect x="2" y="2" width="8" height="8" transform="rotate(45 6 6)" fill="none" stroke="var(--c-violet)" stroke-width="2"/></svg>правка DAG`);
   add(`<svg width="26" height="10"><path d="M1,5H25" stroke="var(--c-violet)" stroke-dasharray="4 3" stroke-width="1.5"/></svg>поручение P→E`);
   add(`<svg width="26" height="10"><path d="M1,5H25" stroke="var(--c-orange)" stroke-dasharray="2 3" stroke-width="1.5"/></svg>сообщение`);
-  const kinds=[...new Set(M.items.map(i=>i.kind))];
+  const kinds=[...new Set(M.items.map(i=>i.kind))].filter(k=>k!=="agent_start"&&k!=="agent_stop"); // service kinds stay hidden
   const chips=$("#kindchips");
   kinds.forEach(k=>{ const kk=kindOf(k); const c=H("span",{class:"chip"+(hiddenKinds.has(k)?" off":"")},chips); c.style.cursor="pointer";
-    const sv=S("svg",{width:14,height:14},null); marker(sv,kk[2],7,7,kk[0],4.5); c.appendChild(sv); H("span",{},c,kk[1]+" "+M.items.filter(i=>i.kind===k).length);
+    const sv=S("svg",{width:14,height:14},null); marker(sv,kk[2],7,7,kk[0],4.5); c.appendChild(sv); H("span",{},c,kk[1]); c.title=`${M.items.filter(i=>i.kind===k).length} шт. · клик — скрыть/показать`;
     c.onclick=()=>{ hiddenKinds.has(k)?hiddenKinds.delete(k):hiddenKinds.add(k); c.classList.toggle("off"); drawTimeline(); }; });
-  const dl=$("#dag-legend"); ["pending","running","done","failed","cancelled","blocked"].forEach(s=>{ const e=H("span",{},dl); e.innerHTML=`<span class="sw" style="background:${STATUS[s][0]}"></span>${STATUS[s][2]} ${STATUS[s][1]}`; });
-  const e=H("span",{},dl); e.innerHTML=`<span class="muted">│ пульсирующая рамка — узел изменён последней ревизией · пунктир — ещё не добавлен/удалён</span>`;
 })();
 
 /* ---------- DAG view ---------- */
@@ -890,7 +800,7 @@ function drawRevs(){
 const slider=$("#slider");
 function setCursor(t){ cursor=Math.max(t0,Math.min(t1,t)); slider.value=Math.round((cursor-t0)/SPAN*1000);
   const cx=X(cursor); const l=$("#cur"); if(l){ l.setAttribute("x1",cx); l.setAttribute("x2",cx); $("#curh").setAttribute("d",`M${cx-6},${AX_H-12}h12l-6,8z`); }
-  $("#tb-now").textContent="T+"+rel(cursor); $("#sl-now").textContent="T+"+rel(cursor);
+  $("#sl-now").textContent="T+"+rel(cursor);
   const st=dagAt(cursor); $("#sl-rev").textContent = OPS.length? `ревизия ${st.last+1} / ${OPS.length}` : "";
   drawDag(); drawRevs(); }
 slider.oninput=()=>{ stopPlay(); setCursor(t0+SPAN*slider.value/1000); };
@@ -910,25 +820,21 @@ function applyFocus(){ document.querySelectorAll("#tl [data-step]").forEach(e=>{
   if(!inc.length) box.innerHTML='<div class="empty">инцидентов не зафиксировано</div>';
   const SC={low:"var(--neutral)",medium:"var(--warning)",high:"var(--serious)",critical:"var(--critical)"};
   inc.forEach(i=>{ const d=H("div",{class:"inc"},box); d.style.setProperty("--sevc",SC[i.severity]||SC.medium); if(i.status==="resolved"||i.status==="wontfix") d.style.opacity=.6; else if(i.status==="mitigated") d.style.opacity=.85;
-    const h=H("div",{},d); h.style.display="flex"; h.style.gap="6px"; h.style.alignItems="center"; h.style.flexWrap="wrap";
-    H("span",{class:"sev "+i.severity},h,"⚠ "+i.severity); H("span",{class:"st"},h,i.category); H("span",{class:"st",title:i.status==="mitigated"?"обойдено в сессии, причина не устранена":""},h,({resolved:"✓ ",mitigated:"◐ ",wontfix:"⊘ ",investigating:"… "}[i.status]||"")+i.status);
-    H("span",{class:"muted"},h,"T+"+rel(i.created)+(i.agent?" · "+i.agent:"")+(i.step?" · шаг "+i.step:""));
+    const h=H("div",{class:"row-meta"},d);
+    H("span",{class:"sev "+i.severity},h,i.severity); H("span",{class:"muted"},h,[i.category, ({resolved:"✓ ",mitigated:"◐ ",wontfix:"⊘ ",investigating:"… "}[i.status]||"")+i.status, "T+"+rel(i.created), i.step].filter(Boolean).join(" · "));
     H("div",{class:"tt"},d,i.title);
-    const det=[i.detail, i.impact&&("Влияние: "+i.impact), i.workaround&&("Обход: "+i.workaround)].filter(Boolean).join("\n"); if(det) H("div",{class:"d"},d,det);
+    if(i.detail) H("div",{class:"d"},d,i.detail);
     d.onclick=()=>{ setCursor(i.created); if(i.step) setFocus(i.step); openIncident(i); };
   });
   const hb=$("#hyps"); const hy=M.hyps.slice().sort((a,b)=>a.created-b.created); $("#hyp-count").textContent=hy.length? String(hy.length):"";
   if(!hy.length) hb.innerHTML='<div class="empty">гипотез не записано</div>';
   const HC={open:"var(--neutral)",testing:"var(--c-blue)",confirmed:"var(--good)",refuted:"var(--critical)",abandoned:"var(--cancel)"};
-  hy.forEach(h=>{ const d=H("div",{class:"hyp "+h.status},hb); const top=H("div",{},d); top.style.display="flex"; top.style.gap="6px"; top.style.alignItems="center";
+  hy.forEach(h=>{ const d=H("div",{class:"hyp "+h.status},hb); const top=H("div",{class:"row-meta"},d);
     const s=H("span",{class:"st"},top,h.status); s.style.background=HC[h.status]||HC.open; s.style.color=(h.status==="open"||h.status==="abandoned")?"var(--ink)":"#fff"; s.style.border="none";
-    H("b",{},top,h.id); H("span",{class:"muted"},top,"T+"+rel(h.created)+(h.agent?" · "+h.agent:"")+(h.step?" · "+h.step:""));
+    H("b",{},top,h.id); H("span",{class:"muted"},top,"T+"+rel(h.created)+(h.step?" · "+h.step:""));
     H("div",{class:"claim"},d,h.claim);
     const ev=h.history.filter(x=>x.evidence).slice(-1)[0]; if(ev) H("div",{class:"muted"},d,"↳ "+clip(ev.evidence,200)).style.fontSize="12px";
     d.onclick=()=>{ setCursor(h.updated||h.created); if(h.step) setFocus(h.step); openHyp(h); }; });
-  const at=$("#agents-tbl"); const tb=H("table",{},at); const hr=H("tr",{},H("thead",{},tb)); ["агент","роль","модель","активен","токены","$"].forEach(x=>H("th",{},hr,x));
-  const bd=H("tbody",{},tb); M.agents.forEach(a=>{ const r=H("tr",{class:"r"},bd); H("td",{},r,a.id); const rc=H("td",{},r); const rs=H("span",{class:"role"},rc,ROLE_SHORT[a.role]||a.role); rs.style.cssText=`background:${(ROLE[a.role]||ROLE.other)[0]};color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px`;
-    H("td",{},r,a.model||"—"); H("td",{class:"t"},r,dur(a.spans.reduce((s,x)=>s+x[1]-x[0],0))); H("td",{class:"t"},r,tok(a.tokens)); H("td",{class:"t"},r,money(a.cost)); r.onclick=()=>openAgent(a); });
 })();
 
 /* ---------- log ---------- */
@@ -962,7 +868,7 @@ function openItem(it){ setCursor(it.t); if(it.step) setFocus(it.step);
 function openNode(n){ const evs=M.items.filter(i=>i.step===n.id);
   openDrawer("Узел DAG · "+n.id, [["статус",(STATUS[n.removed?"removed":n.status]||[0,n.status])[1]],["исполнитель",n.assignee],["зависимости",n.deps.join(", ")||"—"],["добавлен","T+"+rel(n.added)+" ("+(n.added_by||"?")+")"],["попыток",String(n.attempts)],["запуски",n.runs.map(r=>`T+${rel(r[0])}–${rel(r[1])} ${r[2]||""}`).join("; ")],["причина",n.reason]],
     [["Цель",n.objective],["Инструкция",n.detail],["История узла",n.history.map(o=>`T+${rel(o.t)} [${o.by||"?"}] ${opLabel(o)}`).join("\n")],["События шага ("+evs.length+")",evs.map(i=>`T+${rel(i.t)} [${i.agent||""}] ${kindOf(i.kind)[1]}: ${i.title}`).join("\n")]]); }
-function openAgent(a){ openDrawer("Агент · "+a.id, [["роль",(ROLE[a.role]||ROLE.other)[1]],["модель",a.model],["родитель",a.parent],["описание",a.label],["шаги",(a.steps||[]).join(", ")],["токены",`${tok(a.tokens)} (in ${tok(a.input)}, out ${tok(a.output)}, cache ${tok(a.cache_read)})`],["стоимость",money(a.cost)],["событий",String(a.events)],["активность",a.spans.map(s=>`T+${rel(s[0])}–${rel(s[1])} ${s[2]}`).join("; ")]]); }
+function openAgent(a){ openDrawer("Агент · "+a.id, [["роль",(ROLE[a.role]||ROLE.other)[1]],["модель",a.model],["родитель",a.parent],["описание",a.label],["активен",dur(a.spans.reduce((s,x)=>s+x[1]-x[0],0))],["шаги",(a.steps||[]).join(", ")],["токены",`${tok(a.tokens)} (in ${tok(a.input)}, out ${tok(a.output)}, cache ${tok(a.cache_read)})`],["стоимость",money(a.cost)],["событий",String(a.events)],["активность",a.spans.map(s=>`T+${rel(s[0])}–${rel(s[1])} ${s[2]}`).join("; ")]]); }
 function openIncident(i){ openDrawer("Инцидент · "+i.id, [["severity",i.severity],["категория",i.category],["статус",i.status],["создан","T+"+rel(i.created)],["решён",i.resolved?"T+"+rel(i.resolved):null],["обойдён",i.mitigated?"T+"+rel(i.mitigated):null],["агент",i.agent],["шаг",i.step],["заголовок",i.title]],
   [["Описание",i.detail],["Влияние",i.impact],["Обход",i.workaround],["История",i.history.map(h=>`T+${rel(h.t)} ${h.op||""} ${h.status} ${h.note||""}`).join("\n")]]); }
 function openHyp(h){ openDrawer("Гипотеза · "+h.id, [["статус",h.status],["агент",h.agent],["шаг",h.step],["создана","T+"+rel(h.created)]], [["Утверждение",h.claim],["История",h.history.map(x=>`T+${rel(x.t)} ${x.status}${x.agent?" ("+x.agent+")":""}${x.evidence?": "+x.evidence:""}`).join("\n")]]); }
