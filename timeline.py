@@ -77,7 +77,10 @@ def parse_time(value, t0: float | None) -> float:
     if re.match(r"^\d{1,2}:\d{2}(:\d{2})?$", s):
         base = _dt.datetime.fromtimestamp(t0 if t0 is not None else time.time())
         parts = [int(x) for x in s.split(":")] + [0]
-        return base.replace(hour=parts[0], minute=parts[1], second=parts[2], microsecond=0).timestamp()
+        dt = base.replace(hour=parts[0], minute=parts[1], second=parts[2], microsecond=0)
+        if t0 is not None and dt.timestamp() < t0 - 12 * 3600:  # wall clock past midnight of the start day
+            dt += _dt.timedelta(days=1)
+        return dt.timestamp()
     iso = s.replace("Z", "+00:00")
     try:
         return _dt.datetime.fromisoformat(iso).timestamp()
@@ -124,6 +127,36 @@ def csv(v):
     return [x.strip() for x in str(v).split(",") if x.strip()]
 
 
+def next_free(prefix: str, taken) -> str:
+    """`<prefix><n>` with n one above the largest numeric id already taken, so it never collides."""
+    nums = [int(x[len(prefix):]) for x in taken if isinstance(x, str) and x.startswith(prefix)
+            and x[len(prefix):].isdigit()]
+    return f"{prefix}{max(nums, default=0) + 1}"
+
+
+# fields a record cannot be folded without; malformed records are skipped by the model and reported by validate
+REQUIRED = {"agent": ("agent",), "dag": ("op", "node"), "usage": ("agent",), "hyp": ("hid",),
+            "incident": ("iid",), "flag": ("value",), "outcome": ("status",), "phase": ("op", "name")}
+
+
+def missing_field(r: dict) -> str | None:
+    for k in REQUIRED.get(r.get("type"), ()):
+        if r.get(k) in (None, ""):
+            return k
+    if r.get("type") == "dag" and r.get("op") == "status" and not r.get("status"):
+        return "status"
+    return None
+
+
+def utf8_stdio():
+    """Always print UTF-8: agents read stdout through pipes whose default code page (cp1252…) can't encode paths."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 # ----------------------------------------------------------------------------
 # journal I/O
 # ----------------------------------------------------------------------------
@@ -154,7 +187,7 @@ class Journal:
         if self.path.exists() and is_sqlite(self.path):
             self._load_db(session)
         elif self.path.exists():
-            with open(self.path, encoding="utf-8") as fh:
+            with open(self.path, encoding="utf-8-sig") as fh:  # -sig: tolerate a BOM from PowerShell editors
                 for i, line in enumerate(fh, 1):
                     line = line.strip()
                     if not line:
@@ -192,14 +225,12 @@ class Journal:
     @property
     def t0(self) -> float | None:
         for r in self.records:
-            if r.get("type") == "session":
+            if r.get("type") == "session" and r.get("t") is not None:
                 return r["t"]
-        return min((r["t"] for r in self.records), default=None)
+        return min((r["t"] for r in self.records if r.get("t") is not None), default=None)
 
     def next_id(self, prefix: str) -> str:
-        n = sum(1 for r in self.records if str(r.get("id", "")).startswith(prefix)
-                and str(r.get("id", ""))[len(prefix):].isdigit())
-        return f"{prefix}{n + 1}"
+        return next_free(prefix, (str(r.get("id", "")) for r in self.records))
 
     def append(self, rec: dict, quiet=False) -> dict:
         rec = {k: v for k, v in rec.items() if v is not None and v != [] and v != ""}
@@ -276,6 +307,7 @@ def build_model(records: list[dict]) -> dict:
     items: list[dict] = []
     usage: list[dict] = []
     cum_by_agent: dict[str, float] = defaultdict(float)
+    cum_parts: dict[str, dict] = defaultdict(lambda: defaultdict(float))  # running in/out/cache per agent
     hyps: dict[str, dict] = {}
     incidents: dict[str, dict] = {}
     flags: list[dict] = []
@@ -287,6 +319,8 @@ def build_model(records: list[dict]) -> dict:
     for r in recs:
         t = r.get("t", 0)
         typ = r.get("type")
+        if r.get("t") is None or missing_field(r):
+            continue  # malformed (hand-edited) record: reported by validate, skipped here
         if typ == "session":
             session.update({k: v for k, v in r.items() if k not in ("type", "id")})
             session["started"] = t
@@ -331,11 +365,21 @@ def build_model(records: list[dict]) -> dict:
             else:
                 delta = tot
                 cum_by_agent[a["id"]] += tot
+            parts = {}
             for k in ("input", "output", "cache_read", "cache_write"):
-                a[k] += r.get(k) or 0
+                v = r.get(k)
+                if v is None:
+                    continue
+                if r.get("cumulative"):  # running totals too: count only the growth since the last record
+                    parts[k] = v - cum_parts[a["id"]][k]
+                    cum_parts[a["id"]][k] = v
+                else:
+                    parts[k] = v
+                    cum_parts[a["id"]][k] += v
+                a[k] += parts[k]
             usage.append({"t": t, "agent": a["id"], "tokens": delta, "cost": r.get("cost") or 0.0,
-                          "step": r.get("step"), "input": r.get("input"), "output": r.get("output"),
-                          "cache_read": r.get("cache_read"), "cache_write": r.get("cache_write")})
+                          "step": r.get("step"), "input": parts.get("input"), "output": parts.get("output"),
+                          "cache_read": parts.get("cache_read"), "cache_write": parts.get("cache_write")})
             continue
         if typ == "dag":
             op = r["op"]
@@ -344,6 +388,8 @@ def build_model(records: list[dict]) -> dict:
             if by:
                 agent(by, t)
             n = nodes.get(nid)
+            if op == "add" and n is not None and n["removed"]:  # re-added after removal: a fresh node, same id
+                n.update(removed=False, status="pending", added=t, added_by=by, reason=None)
             if op == "add" or n is None:
                 n = nodes.setdefault(nid, {"id": nid, "objective": "", "deps": [], "assignee": None,
                                            "status": "pending", "added": t, "added_by": by,
@@ -370,6 +416,9 @@ def build_model(records: list[dict]) -> dict:
             if op == "status":
                 n["status"] = r["status"]
                 if r["status"] == "running":
+                    if n["runs"] and n["runs"][-1][1] is None:  # restarted without a terminal status in between
+                        n["runs"][-1][1] = t
+                        n["runs"][-1][2] = "restarted"
                     n["attempts"] += 1
                     n["runs"].append([t, None, None])
                     if n["assignee"]:
@@ -730,9 +779,12 @@ def apply_brand(page: str, uid: str = "lg") -> str:
 
 def render_html(m: dict, title=None) -> str:
     tpl = apply_brand(TEMPLATE.read_text(encoding="utf-8"))
-    data = json.dumps(m, ensure_ascii=False, default=str).replace("</", "<\\/")
+    # No literal "<" may reach the <script>: "</script" would close it, and "<!--<script" switches the HTML
+    # tokenizer into a state where the real </script> no longer ends the block (the page renders blank).
+    data = json.dumps(m, ensure_ascii=False, default=str).replace("<", "\\u003c")
     t = title or m["session"].get("title") or "Session timeline"
-    return tpl.replace("/*__DATA__*/null", data).replace("__TITLE__", html.escape(t))
+    head, _, tail = tpl.partition("/*__DATA__*/null")  # substitute the title before data goes in
+    return head.replace("__TITLE__", html.escape(t)) + data + tail
 
 
 # ----------------------------------------------------------------------------
@@ -981,11 +1033,12 @@ def import_harness(run_dir: Path, bucket_s: float = 60.0) -> list[dict]:
         forks = [dict(r) for r in con.execute("SELECT * FROM forks")]
     except sqlite3.Error:
         pass
+    con.close()
 
     cfg = {}
     snap = run_dir / "config.snapshot.json"
     if snap.exists():
-        cfg = json.loads(snap.read_text(encoding="utf-8"))
+        cfg = json.loads(snap.read_text(encoding="utf-8-sig"))
     pi = cfg.get("pi", {})
     model = f"{pi.get('provider')}/{pi.get('model')}" if pi.get("model") else None
     challenge = jl(kv.get("challenge"))
@@ -1144,7 +1197,7 @@ def import_harness(run_dir: Path, bucket_s: float = 60.0) -> list[dict]:
         buckets: dict[int, dict] = {}
         sess_model = None
         tools: dict[int, list] = defaultdict(list)
-        with open(f, encoding="utf-8") as fh:
+        with open(f, encoding="utf-8-sig") as fh:
             for line in fh:
                 try:
                     o = json.loads(line)
@@ -1199,12 +1252,27 @@ def _ts_of(o, m):
     return None
 
 
+def transcript_start(path: Path) -> float | None:
+    """Time of the first timestamped message of a pi session file."""
+    with open(path, encoding="utf-8-sig") as fh:
+        for line in fh:
+            try:
+                o = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if o.get("type") in ("message", "message_end"):
+                t = _ts_of(o, o.get("message") or {})
+                if t:
+                    return t
+    return None
+
+
 def transcript_lines(path: Path, t0: float | None, grep=None, since=None, until=None, width=220,
                      results=160, thinking=False) -> list[str]:
     """One line per assistant text / tool call / tool result / user prompt of a pi session (or pi stream) file."""
     rx = re.compile(grep, re.I) if grep else None
     msgs = []
-    with open(path, encoding="utf-8") as fh:
+    with open(path, encoding="utf-8-sig") as fh:
         for line in fh:
             try:
                 o = json.loads(line)
@@ -1218,7 +1286,7 @@ def transcript_lines(path: Path, t0: float | None, grep=None, since=None, until=
             msgs.append((_ts_of(o, m), m))
     if not msgs:
         return [f"(no messages in {path})"]
-    base = t0 if t0 is not None else next(t for t, _ in msgs if t)
+    base = t0 if t0 is not None else next((t for t, _ in msgs if t), 0.0)
     one = lambda x: re.sub(r"\s+", " ", str(x or "")).strip()
     clip = lambda x, n: x if len(x) <= n else x[: n - 1] + "…"
     out = []
@@ -1268,10 +1336,11 @@ def validate_records(records: list[dict]) -> tuple[list[str], list[str]]:
     warns: list[str] = []
     if not records:
         return ["journal is empty"], []
-    sess = [r for r in records if r.get("type") == "session"]
+    sess = [r for r in records if r.get("type") == "session" and r.get("t") is not None]
     if not sess:
         warns.append("no session record (run `init`)")
-    t0 = sess[0]["t"] if sess else min(r["t"] for r in records)
+    timed = [r["t"] for r in records if r.get("t") is not None]
+    t0 = sess[0]["t"] if sess else min(timed, default=0.0)
     t_end = sess[0].get("ended") if sess else None
     now = time.time()
     rel = lambda t: ("T-" + fmt_rel(t0 - t)) if t < t0 else ("T+" + fmt_rel(t - t0))
@@ -1298,6 +1367,10 @@ def validate_records(records: list[dict]) -> tuple[list[str], list[str]]:
         t, typ = r.get("t"), r.get("type")
         if t is None:
             errors.append(f"{rid(r)}: record without time")
+            continue
+        miss = missing_field(r)
+        if miss:
+            errors.append(f"{rid(r)} ({typ}): no `{miss}` field — the record is ignored by renders")
             continue
         if typ != "session" and t < t0 - 1:
             errors.append(f"{rid(r)} ({typ}): {rel(t)} is before session start")
@@ -1547,10 +1620,10 @@ def main(argv=None):
     p.add_argument("--last", type=int, help="only last N lines")
 
     a = ap.parse_args(argv)
+    utf8_stdio()
     if a.cmd == "sessions":
         if not is_sqlite(Path(a.file)):
             raise SystemExit(f"{a.file} is not a SQLite DB")
-        sys.stdout.reconfigure(encoding="utf-8")
         for sid, title, outcome, started, dur in db_sessions(Path(a.file)):
             print(f"{sid:<24} {outcome or '-':<12} {fmt_abs(started)}  {fmt_dur(dur or 0):>8}  {title}")
         return
@@ -1562,18 +1635,20 @@ def main(argv=None):
     ts = lambda: parse_time(getattr(a, "t", None), t0)
 
     if a.cmd == "transcript":
-        since = parse_time(a.since, t0) if a.since else None
-        until = parse_time(a.until, t0) if a.until else None
+        # T+ and --since/--until count from the journal start, or from the earliest transcript if there is no journal
+        base = t0 if t0 is not None else min(
+            (x for x in (transcript_start(Path(f)) for f in a.session_file) if x is not None), default=None)
+        since = parse_time(a.since, base) if a.since else None
+        until = parse_time(a.until, base) if a.until else None
         lines = []
         for f in a.session_file:
             if len(a.session_file) > 1:
                 lines.append(f"===== {Path(f).name}")
-            lines += transcript_lines(Path(f), t0, a.grep, since, until, a.width, a.results, a.thinking)
+            lines += transcript_lines(Path(f), base, a.grep, since, until, a.width, a.results, a.thinking)
         if a.last:
             lines = lines[-a.last:]
-        sys.stdout.reconfigure(encoding="utf-8")
         if t0 is None:
-            print("# note: no journal session yet — times are relative to the transcript start")
+            print("# note: no journal session yet — times are relative to the earliest transcript start")
         print("\n".join(lines))
         return
 
@@ -1582,6 +1657,9 @@ def main(argv=None):
             raise SystemExit(f"{a.file} already has {len(J.records)} records (use --force)")
         if a.force:
             J.write_all([])
+        bad = [kv for kv in a.meta if "=" not in kv]
+        if bad:
+            raise SystemExit(f"--meta expects key=value, got: {', '.join(bad)}")
         meta = dict(kv.split("=", 1) for kv in a.meta)
         J.append({"type": "session", "t": parse_time(a.t, None), "id": "s0", "title": a.title, "task": a.task,
                   "goal": a.goal, "meta": meta or None})
@@ -1622,7 +1700,10 @@ def main(argv=None):
                   "cost": a.cost, "cumulative": a.cumulative or None, "step": a.step})
     elif a.cmd == "hyp":
         if a.op == "add":
-            hid = a.hid or f"H{sum(1 for r in J.records if r.get('type') == 'hyp' and r.get('op') == 'add') + 1}"
+            hids = {r.get("hid") for r in J.records if r.get("type") == "hyp"}
+            if a.hid and a.hid in hids:
+                raise SystemExit(f"hypothesis {a.hid} already exists; change it with `hyp set`")
+            hid = a.hid or next_free("H", hids)
             J.append({"type": "hyp", "t": ts(), "id": J.next_id("y"), "op": "add", "hid": hid, "claim": a.claim,
                       "agent": a.agent, "step": a.step, "status": "open"}, quiet=True)
             print(hid)
@@ -1631,7 +1712,10 @@ def main(argv=None):
                       "status": a.status, "evidence": a.evidence, "agent": a.agent})
     elif a.cmd in ("incident", "bug"):
         if a.op == "add":
-            iid = a.iid or f"I{sum(1 for r in J.records if r.get('type') == 'incident' and r.get('op') == 'add') + 1}"
+            iids = {r.get("iid") for r in J.records if r.get("type") == "incident"}
+            if a.iid and a.iid in iids:
+                raise SystemExit(f"incident {a.iid} already exists; change it with `incident update`")
+            iid = a.iid or next_free("I", iids)
             J.append({"type": "incident", "t": ts(), "id": J.next_id("i"), "op": "add", "iid": iid,
                       "title": a.title, "severity": a.severity, "category": a.category, "agent": a.agent,
                       "step": a.step, "detail": a.detail, "impact": a.impact, "workaround": a.workaround,
@@ -1657,9 +1741,12 @@ def main(argv=None):
                   "agent": a.agent, "note": a.note})
     elif a.cmd == "end":
         recs = [dict(r) for r in J.records]
-        for r in recs:
-            if r.get("type") == "session":
-                r["ended"] = ts()
+        sess = [r for r in recs if r.get("type") == "session"]
+        if not sess:
+            raise SystemExit(f"{a.file}: no session record — run `init` first")
+        t_end = ts()
+        for r in sess:
+            r["ended"] = t_end
         J.write_all(recs)
         print("ok")
     elif a.cmd == "render":
@@ -1672,7 +1759,6 @@ def main(argv=None):
                 Path(a.out).write_text(txt, encoding="utf-8")
                 print(a.out)
             else:
-                sys.stdout.reconfigure(encoding="utf-8")
                 print(txt)
         elif a.format == "sqlite":
             outp = a.out or str(out_stem) + ".db"
@@ -1694,7 +1780,6 @@ def main(argv=None):
             if a.out:
                 Path(a.out).write_text(s, encoding="utf-8")
             else:
-                sys.stdout.reconfigure(encoding="utf-8")
                 print(s)
         else:
             outp = a.out or str(out_stem) + ".html"
@@ -1709,7 +1794,6 @@ def main(argv=None):
         print(f"{len(recs)} records -> {a.file}")
     elif a.cmd == "validate":
         errors, warns = validate_records(J.records)
-        sys.stdout.reconfigure(encoding="utf-8")
         for e in errors:
             print("ERROR", e)
         for w in warns:

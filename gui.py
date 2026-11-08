@@ -29,7 +29,7 @@ import time
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -71,7 +71,7 @@ def sniff(p: Path) -> str | None:
                 return "harness"
             return None
         if p.suffix.lower() == ".jsonl":
-            with open(p, encoding="utf-8", errors="replace") as fh:
+            with open(p, encoding="utf-8-sig", errors="replace") as fh:
                 for line in fh:
                     if line.strip():
                         rec = json.loads(line)
@@ -89,8 +89,12 @@ _derive_lock = threading.Lock()
 def derive(src: Path, kind: str) -> Path:
     """A timeline DB rendered from a journal or a harness ledger, cached by the source's mtime/size."""
     src = src.resolve()
-    parts = [src, src.with_name(src.name + "-wal")] if kind == "harness" else [src]
-    sig = "|".join(f"{q.stat().st_mtime_ns}:{q.stat().st_size}" for q in parts if q.exists())
+    parts = [src]
+    if kind == "harness":  # everything import_harness reads: ledger (+WAL), config snapshot, pi-sessions
+        run = src.parent
+        parts += [src.with_name(src.name + "-wal"), run / "config.snapshot.json",
+                  *sorted((run / "pi-sessions").glob("*.jsonl"))]
+    sig = "|".join(f"{q.name}:{q.stat().st_mtime_ns}:{q.stat().st_size}" for q in parts if q.exists())
     pk = hashlib.sha1(str(src).lower().encode()).hexdigest()[:10]
     out = DERIVED / f"{pk}-{hashlib.sha1(sig.encode()).hexdigest()[:10]}.db"
     with _derive_lock:
@@ -117,6 +121,20 @@ def derive(src: Path, kind: str) -> Path:
                 except OSError:
                     pass
         return out
+
+
+class NotFound(LookupError):
+    """A DB id that is not under the opened sources (HTTP 404)."""
+
+
+def content_disposition(filename: str) -> str:
+    """attachment header that survives non-latin-1 names (RFC 6266 / 5987): ASCII fallback + UTF-8 name."""
+    stem, dot, ext = filename.rpartition(".")
+    if not dot:
+        stem, ext = filename, ""
+    safe = re.sub(r"[^A-Za-z0-9_-]+", "_", stem).strip("_") or "session"
+    ascii_name = f"{safe}.{ext}" if ext else safe
+    return f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(filename, safe='')}"
 
 
 def db_summary(p: Path):
@@ -284,7 +302,7 @@ class Index:
             with self.lock:
                 e = self.dbs.get(db_id)
         if e is None:
-            raise KeyError("unknown db (not under the opened sources)")
+            raise NotFound("unknown db (not under the opened sources)")
         return e
 
     def get(self, db_id: str) -> Path:
@@ -575,17 +593,17 @@ class Handler(BaseHTTPRequestHandler):
             if u.path == "/api/download":
                 db, session, J = self._journal(q)
                 fmt = q.get("format", ["jsonl"])[0]
-                name = re.sub(r"[^\w.-]+", "_", J.db_session or "session")
+                name = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', "_", J.db_session or "session")
                 if fmt == "jsonl":
                     body = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in J.records)
                     return self._send(200, body, "application/x-ndjson; charset=utf-8",
-                                      {"Content-Disposition": f'attachment; filename="{name}.jsonl"'})
+                                      {"Content-Disposition": content_disposition(f"{name}.jsonl")})
                 if fmt == "html":
                     return self._send(200, TL.render_html(TL.build_model(J.records)), "text/html; charset=utf-8",
-                                      {"Content-Disposition": f'attachment; filename="{name}.html"'})
+                                      {"Content-Disposition": content_disposition(f"{name}.html")})
                 return self._send(400, {"error": "format: jsonl|html"})
             return self._send(404, {"error": "not found"})
-        except KeyError as e:
+        except NotFound as e:
             return self._send(404, {"error": str(e)})
         except (ValueError, SystemExit) as e:  # timeline.py reports user errors via SystemExit
             return self._send(400, {"error": str(e)})
@@ -633,7 +651,7 @@ class Handler(BaseHTTPRequestHandler):
             if u.path == "/api/pick":
                 return self._send(200, {"path": pick(body.get("kind", "dir"), body.get("start"))})
             return self._send(404, {"error": "not found"})
-        except KeyError as e:
+        except NotFound as e:
             return self._send(404, {"error": str(e)})
         except sqlite3.Error as e:
             return self._send(400, {"error": f"SQL: {e}"})
@@ -673,6 +691,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
+    TL.utf8_stdio()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("roots", nargs="*", default=["."], metavar="PATH", help="folder or timeline file")
     ap.add_argument("--port", type=int, default=8780)
