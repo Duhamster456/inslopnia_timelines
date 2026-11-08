@@ -465,7 +465,7 @@ const clip = (s,n) => !s? "" : (s.length>n? s.slice(0,n-1)+"…" : s);
 
 const ROLE = {P:["var(--c-violet)","Планировщик P"],E:["var(--c-aqua)","Исполнитель E"],R:["var(--c-yellow)","Исследователь R"],C:["var(--c-magenta)","Критик C"],operator:["var(--c-orange)","Оператор"],runtime:["var(--muted)","Runtime"],other:["var(--c-blue)","Другое"]};
 const ROLE_SHORT = {operator:"OP",runtime:"RT",other:"?"};
-const STATUS = {pending:["var(--neutral)","ожидает","·"],running:["var(--c-blue)","выполняется","▶"],done:["var(--good)","готово","✓"],failed:["var(--critical)","провал","✗"],cancelled:["var(--cancel)","отменён","⊘"],blocked:["var(--warning)","блок","■"],removed:["var(--cancel)","удалён","⌫"],active:["var(--c-violet)","активен","●"],killed:["var(--critical)","убит","✗"]};
+const STATUS = {pending:["var(--neutral)","ожидает","·"],running:["var(--c-blue)","выполняется","▶"],done:["var(--good)","готово","✓"],failed:["var(--critical)","провал","✗"],cancelled:["var(--cancel)","отменён","⊘"],blocked:["var(--warning)","блок","■"],removed:["var(--cancel)","удалён","⌫"],active:["var(--c-violet)","активен","●"],killed:["var(--critical)","убит","✗"],restarted:["var(--warning)","перезапущен","↻"]};
 const KIND = {
   action:["var(--c-blue)","действие","circle"], observation:["var(--c-aqua)","наблюдение","ring"], decision:["var(--c-violet)","решение","diamond"],
   hypothesis:["var(--c-yellow)","гипотеза","square"], milestone:["var(--c-green)","веха","tri"], message:["var(--c-orange)","сообщение","circle-s"],
@@ -511,6 +511,7 @@ function dagAt(T){
   const st = {}; let last = -1;
   OPS.forEach((o,i)=>{ if(o.t> T + 1e-6) return; last=i;
     let n = st[o.node]; if(!n) n = st[o.node] = {id:o.node, status:"pending", deps:[], objective:"", assignee:null, attempts:0, removed:false, reason:null, touched:o.t};
+    if(o.op==="add" && n.removed){ n.removed=false; n.status="pending"; n.reason=null; }  // re-added after removal
     if(o.objective) n.objective=o.objective; if(o.assignee) n.assignee=o.assignee;
     if(o.deps && (o.op==="add"||o.op==="update")) n.deps=o.deps.slice();
     if(o.op==="dep_add") (o.deps||[]).forEach(d=>{ if(!n.deps.includes(d)) n.deps.push(d); });
